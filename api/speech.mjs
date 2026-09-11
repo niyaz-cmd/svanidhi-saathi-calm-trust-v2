@@ -1,3 +1,5 @@
+import { moneySpeechText } from '../src/core/money-speech.mjs';
+
 const LANGUAGE_CODES = Object.freeze({ kn:'kn-IN', hi:'hi-IN', en:'en-IN' });
 const MAX_TEXT_LENGTH = 600;
 const REQUESTS_PER_MINUTE = 20;
@@ -47,7 +49,9 @@ export function normalizeSpeechRequest(body) {
   const text = String(body?.text ?? '').trim();
   const languageCode = LANGUAGE_CODES[body?.language];
   if (!text || text.length > MAX_TEXT_LENGTH || !languageCode) return null;
-  return { text, languageCode };
+  const spokenText = moneySpeechText(text, body.language);
+  if (spokenText.length > MAX_TEXT_LENGTH) return null;
+  return { text:spokenText, languageCode };
 }
 
 export default async function handler(request, response) {

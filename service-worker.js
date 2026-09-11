@@ -1,9 +1,9 @@
-const CACHE = 'saathi-field-v0.5.0';
+const CACHE = 'saathi-field-v0.5.1';
 const APP_SHELL = [
   '/', '/index.html', '/styles.css', '/manifest.webmanifest', '/public/icons/icon.svg',
   '/src/app.mjs', '/src/ui/icons.mjs', '/src/core/finance-engine.mjs', '/src/core/speech-parser.mjs',
   '/src/core/research-events.mjs', '/src/core/device-capabilities.mjs', '/src/core/voice-flow.mjs',
-  '/src/core/voice-copy.mjs', '/src/core/activity-store.mjs', '/src/core/ledger-store.mjs', '/src/core/audio-capture.mjs'
+  '/src/core/voice-copy.mjs', '/src/core/activity-store.mjs', '/src/core/ledger-store.mjs', '/src/core/audio-capture.mjs', '/src/core/money-speech.mjs'
 ];
 
 self.addEventListener('install', event => {

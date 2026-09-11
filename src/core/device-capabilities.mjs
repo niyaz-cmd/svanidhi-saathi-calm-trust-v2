@@ -1,3 +1,5 @@
+import { moneySpeechText } from './money-speech.mjs';
+
 export const LANGUAGE_LOCALES = Object.freeze({ kn: 'kn-IN', hi: 'hi-IN', en: 'en-IN' });
 export const SPEECH_HINTS = Object.freeze({
   kn:Object.freeze(['ಮಾರಾಟ', 'ಒಟ್ಟು ಮೊತ್ತ', 'ರೂಪಾಯಿ', 'ವ್ಯಾಪಾರದ ಖರ್ಚು', 'ಸರಕು']),
@@ -186,6 +188,7 @@ function requestSarvamAudio(text, lang) {
 }
 
 function sarvamAudio(text, lang) {
+  text = moneySpeechText(text, lang);
   const key = speechCacheKey(text, lang);
   let pending = speechAudioCache.get(key);
   if (pending) return pending;
@@ -208,7 +211,7 @@ export async function preloadSpeech(texts, lang = 'en') {
 }
 
 export async function speak(text, lang = 'en') {
-  const value = String(text ?? '').trim();
+  const value = moneySpeechText(String(text ?? '').trim(), lang);
   if (!value) return { ok:false, provider:'none' };
 
   stopCurrentSpeech();

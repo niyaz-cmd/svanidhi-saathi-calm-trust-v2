@@ -149,12 +149,13 @@ test('device TTS resolves only after playback has ended', async () => {
 
   try {
     let resolved = false;
-    const pending = speak('How much were your sales today?', 'en').then((result) => {
+    const pending = speak('₹420', 'kn').then((result) => {
       resolved = true;
       return result;
     });
     await Promise.resolve();
     assert.equal(resolved, false);
+    assert.equal(utterance.text, 'ನಾಲ್ಕು ನೂರ ಇಪ್ಪತ್ತು ರೂಪಾಯಿ');
     utterance.onend();
     const result = await pending;
     assert.equal(result.ok, true);
@@ -201,7 +202,7 @@ test('online Sarvam failure never silently falls back to the robotic device voic
   };
 
   try {
-    const pending = speak('How much were your sales today?', 'en');
+    const pending = speak('₹420', 'kn');
     await new Promise((resolve) => setImmediate(resolve));
     deviceUtterance?.onend();
     const result = await pending;
