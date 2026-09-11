@@ -1,0 +1,7 @@
+field-assets/
+tests/
+*.pdf
+*.xlsx
+CHANGELOG_*.md
+README.md
+SHA256SUMS
