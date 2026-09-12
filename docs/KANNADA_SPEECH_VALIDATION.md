@@ -1,0 +1,35 @@
+# Kannada speech validation
+
+## What this protects
+
+Currency is converted to Kannada words before either Sarvam TTS or offline device speech. On-screen and stored amounts remain numeric. This avoids delegating the interpretation of currency digits to the TTS model.
+
+The original defect was reproduced: a generated `₹420` utterance transcribed as 400, while full Kannada words transcribed as 420. This regression suite covers the number system, not a replacement rule for twenty.
+
+## Repeatable checks
+
+Run `npm test`, `npm run check`, and `npm run build` before release.
+
+- Explicit reference spellings for every cardinal from 0 through 99.
+- Every whole amount from 0 through 99,999 is decoded back using an independent word-to-value checker.
+- Every 0–999 suffix is checked after seven larger place-value bases.
+- 10,000 deterministic larger values exercise crore, lakh, thousand, hundred and unit composition.
+- All 100 paise values are checked after ten different whole-rupee values.
+- Indian/international comma grouping, Kannada digits, suffix confirmations, negative amounts and the supported upper boundary are checked.
+- Every two-digit currency amount is checked at the speech API boundary.
+- Invalid precision and scientific notation must not be partially rewritten into a different amount.
+
+The converter supports whole rupees from 0 through 999,999,999 with up to two decimal places, plus negative balances. Outside that range it does not expand the amount. Those inputs are not pronunciation-certified.
+
+Reference wording was cross-checked against the number-system tables in VTU's *Vyavaharika Kannada* and the cardinal-number section of *A Manual of Modern Kannada*. Spoken regional variants exist; these fixtures choose one consistent spelling.
+
+- https://vtu.ac.in/pdf/cbcs/201718/kan2.pdf
+- https://hasp.ub.uni-heidelberg.de/catalog/view/736/1242/90904
+
+## Opt-in live audit
+
+`node scripts/audit-kannada-speech.mjs https://svanidhi-saathi-calm-trust-v2.vercel.app /path/to/evidence all`
+
+This explicitly calls the configured speech and transcription providers and uses their quota. It is separate from normal tests. It covers every 0–99 cardinal, representative hundreds, larger boundaries, paise and negative values. Generated WAVs, input, output transcript, and numeric comparisons are saved. An ambiguous batch is retried as individual amounts; original failures are retained rather than overwritten.
+
+An audio-to-transcription pass is provider integration evidence, not a guarantee of pronunciation on every future generation, a native listener review, or a microphone/device test. Review unmatched transcripts and their audio instead of treating HTTP 200 as success.

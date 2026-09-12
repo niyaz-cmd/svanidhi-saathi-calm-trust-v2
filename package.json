@@ -1,6 +1,6 @@
 {
   "name": "svanidhi-saathi-field-prototype",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "private": true,
   "type": "module",
   "description": "Field-grade PWA prototype for SVANidhi Saathi vendor research.",

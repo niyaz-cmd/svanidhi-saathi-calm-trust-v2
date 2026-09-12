@@ -36,6 +36,6 @@ test('amount confirmation, native digits, paise, and repeated normalization pres
 
 test('other languages and unsupported amounts are never partially rewritten', () => {
   for (const lang of ['en', 'hi']) assert.equal(moneySpeechText('₹420', lang), '₹420');
-  for (const text of ['₹4,20', '₹420.123', '₹1000000000', '11 ದಿನ', '₹-420'])
+  for (const text of ['₹4,20', '₹420.123', '₹1.2.3', '₹1e6', '₹1000000000', '11 ದಿನ'])
     assert.equal(moneySpeechText(text, 'kn'), text);
 });
