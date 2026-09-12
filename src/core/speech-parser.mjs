@@ -1,3 +1,5 @@
+import { kannadaNumber } from './money-speech.mjs';
+
 const COLLECTION_WORDS = [
   'collections', 'collection', 'collected', 'sales', 'sale', 'earned',
   'ವಸೂಲಿ', 'ಕಲೆಕ್ಷನ್', 'ಮಾರಾಟ', 'ಆದಾಯ',
@@ -25,6 +27,18 @@ const NATIVE_DIGITS = Object.freeze({
   '೦':'0','೧':'1','೨':'2','೩':'3','೪':'4','೫':'5','೬':'6','೭':'7','೮':'8','೯':'9'
 });
 
+// Accept common contracted and joined hundred forms emitted by Kannada STT.
+const KANNADA_HUNDREDS = [
+  [100,['ನೂರ','ಒಂದುನೂರ']], [200,['ಇನ್ನೂರ','ಎರಡುನೂರ']], [300,['ಮುನ್ನೂರ','ಮೂರುನೂರ']],
+  [400,['ನಾನೂರ','ನಾಲ್ಕುನೂರ']], [500,['ಐನೂರ','ಐದುನೂರ']], [600,['ಆರುನೂರ']],
+  [700,['ಏಳುನೂರ']], [800,['ಎಂಟುನೂರ']], [900,['ಒಂಬೈನೂರ','ಒಂಬತ್ತುನೂರ']]
+];
+const VOWEL_SIGNS = {'ಅ':'','ಆ':'ಾ','ಇ':'ಿ','ಈ':'ೀ','ಉ':'ು','ಊ':'ೂ','ಎ':'ೆ','ಏ':'ೇ','ಐ':'ೈ','ಒ':'ೊ','ಓ':'ೋ','ಔ':'ೌ'};
+const KANNADA_HUNDRED_WORDS = Object.fromEntries(KANNADA_HUNDREDS.flatMap(([hundred,forms])=>forms.flatMap(stem=>[
+  [stem,hundred],[stem+'ು',hundred],
+  ...Array.from({length:99},(_,i)=>{ const n=i+1, word=kannadaNumber(n);return [[stem+word,hundred+n],[stem+(VOWEL_SIGNS[word[0]]??word[0])+word.slice(1),hundred+n]]; }).flat()
+])));
+
 const NUMBER_WORDS = Object.freeze({
   en:Object.freeze({
     zero:0, one:1, two:2, three:3, four:4, five:5, six:6, seven:7, eight:8, nine:9,
@@ -40,6 +54,12 @@ const NUMBER_WORDS = Object.freeze({
     'सत्तर':70, 'अस्सी':80, 'नब्बे':90, 'सौ':100, 'हजार':1000, 'हज़ार':1000, 'लाख':100000
   }),
   kn:Object.freeze({
+    ...Object.fromEntries(Array.from({length:100},(_,n)=>[kannadaNumber(n),n])),
+    ...KANNADA_HUNDRED_WORDS,
+    'ನೂರ':100, 'ನೂರಾ':100, 'ಸಾವಿರದ':1000, 'ಲಕ್ಷದ':100000, 'ಕೋಟಿ':10000000, 'ಕೋಟಿಯ':10000000,
+    'ಇನ್ನೂರು':200, 'ಇನ್ನೂರ':200, 'ಮುನ್ನೂರು':300, 'ಮುನ್ನೂರ':300, 'ನಾನೂರು':400, 'ನಾನೂರ':400,
+    'ಐನೂರು':500, 'ಐನೂರ':500, 'ಆರುನೂರು':600, 'ಆರುನೂರ':600, 'ಏಳುನೂರು':700, 'ಏಳುನೂರ':700,
+    'ಎಂಟುನೂರು':800, 'ಎಂಟುನೂರ':800, 'ಒಂಬೈನೂರು':900, 'ಒಂಬೈನೂರ':900,
     'ಸೊನ್ನೆ':0, 'ಒಂದು':1, 'ಎರಡು':2, 'ಮೂರು':3, 'ನಾಲ್ಕು':4, 'ಐದು':5, 'ಆರು':6,
     'ಏಳು':7, 'ಎಂಟು':8, 'ಒಂಬತ್ತು':9, 'ಹತ್ತು':10, 'ಹನ್ನೊಂದು':11, 'ಹನ್ನೆರಡು':12,
     'ಹದಿಮೂರು':13, 'ಹದಿನಾಲ್ಕು':14, 'ಹದಿನೈದು':15, 'ಹದಿನಾರು':16, 'ಹದಿನೇಳು':17,
@@ -70,11 +90,9 @@ function normalizeSttDigitSpacing(value) {
 }
 
 function extractDigitCandidates(text) {
-  const normalized = normalizeSttDigitSpacing(text);
-  const matches = normalized.match(/₹?\s*(?:\d{1,3}(?:,\d{2,3})+|\d+)(?:\.\d{1,2})?/g) ?? [];
-  return matches
-    .map((match) => Number(match.replace(/[₹,\s]/g, '')))
-    .filter((value) => Number.isFinite(value));
+  return [...text.matchAll(/(?:\d{1,3}(?:,\d{2,3})+|\d+)(?:\.\d{1,2})?/g)]
+    .map(match => ({value:Number(match[0].replaceAll(',', '')), start:match.index, end:match.index+match[0].length}))
+    .filter(candidate => Number.isFinite(candidate.value));
 }
 
 function evaluateNumberWords(tokens) {
@@ -98,21 +116,23 @@ function evaluateNumberWords(tokens) {
 function extractWordCandidates(text, language) {
   const lexicon = NUMBER_WORDS[language] ?? NUMBER_WORDS.en;
   const connectors = CONNECTORS[language] ?? CONNECTORS.en;
-  const words = normalizeNativeDigits(text).toLocaleLowerCase().match(/[\p{L}\p{M}]+|\d+/gu) ?? [];
+  const words = [...text.toLocaleLowerCase().matchAll(/[\p{L}\p{M}]+|(?:\d{1,3}(?:,\d{2,3})+|\d+)(?:\.\d{1,2})?/gu)];
   const candidates = [];
   let sequence = [];
   const flush = () => {
     if (!sequence.length) return;
     if (sequence.some((token) => token.kind === 'word')) {
       const value = evaluateNumberWords(sequence);
-      if (Number.isFinite(value)) candidates.push(value);
+      if (Number.isFinite(value)) candidates.push({value,start:sequence[0].start,end:sequence.at(-1).end});
     }
     sequence = [];
   };
-  for (const word of words) {
-    if (Object.hasOwn(lexicon, word)) sequence.push({ value:lexicon[word], kind:'word' });
-    else if (/^\d+$/.test(word)) sequence.push({ value:Number(word), kind:'digit' });
-    else if (sequence.length && connectors.has(word)) sequence.push({ value:0, kind:'connector' });
+  for (const match of words) {
+    const word=match[0], position={start:match.index,end:match.index+word.length};
+    if (sequence.length && /[^\s-]/u.test(text.slice(sequence.at(-1).end,match.index))) flush();
+    if (Object.hasOwn(lexicon, word)) sequence.push({ value:lexicon[word], kind:'word', ...position });
+    else if (/^\d/.test(word)) sequence.push({ value:Number(word.replaceAll(',','')), kind:'digit', ...position });
+    else if (sequence.length && connectors.has(word)) sequence.push({ value:0, kind:'connector', ...position });
     else flush();
   }
   flush();
@@ -120,14 +140,19 @@ function extractWordCandidates(text, language) {
 }
 
 export function parseCurrencyAmount(transcript, { language = 'en' } = {}) {
-  const digitCandidates = extractDigitCandidates(transcript);
+  // Sales/spending capture accepts non-negative amounts. Never discard a spoken sign.
+  const signedText = normalizeNativeDigits(transcript);
+  if (/(?:[-−]\s*₹?\s*\d|₹\s*[-−]\s*\d|ಮೈನಸ್|ಋಣ|माइनस|ऋण|\bminus\b|\bnegative\b)/iu.test(signedText))
+    return { amount:null, candidates:[], confidence:'low' };
+  const normalized = normalizeSttDigitSpacing(transcript);
+  const digitCandidates = extractDigitCandidates(normalized);
   const languages = [language, ...Object.keys(NUMBER_WORDS).filter((candidate) => candidate !== language)];
-  const wordCandidates = languages.flatMap((candidate) => extractWordCandidates(transcript, candidate));
-  const uniqueWords = [...new Set(wordCandidates)];
-  const incorporatedDigits = uniqueWords.length === 1 && digitCandidates.length > 0
-    && digitCandidates.every((digit) => digit > 0 && uniqueWords[0] > digit && uniqueWords[0] % digit === 0);
+  const wordCandidates = languages.flatMap((candidate) => extractWordCandidates(normalized, candidate));
+  // A digit inside a complete word/scale phrase belongs to that phrase. Match its
+  // position, not divisibility, so a separate repeated amount is still ambiguous.
+  const independentDigits = digitCandidates.filter(digit => !wordCandidates.some(word => digit.start >= word.start && digit.end <= word.end));
   const candidates = [];
-  const values = incorporatedDigits ? uniqueWords : [...digitCandidates, ...wordCandidates];
+  const values = [...independentDigits.map(item=>item.value), ...wordCandidates.map(item=>item.value)];
   for (const value of values) {
     if (!candidates.includes(value)) candidates.push(value);
   }

@@ -4,7 +4,7 @@ const SMALL = ['ಸೊನ್ನೆ','ಒಂದು','ಎರಡು','ಮೂರು'
 const TENS = ['','','ಇಪ್ಪತ್ತು','ಮೂವತ್ತು','ನಲವತ್ತು','ಐವತ್ತು','ಅರವತ್ತು','ಎಪ್ಪತ್ತು','ಎಂಬತ್ತು','ತೊಂಬತ್ತು'];
 const ENDINGS = ['','ೊಂದು','ೆರಡು','ಮೂರು','ನಾಲ್ಕು','ೈದು','ಾರು','ೇಳು','ೆಂಟು','ೊಂಬತ್ತು'];
 
-function kannadaNumber(n) {
+export function kannadaNumber(n) {
   if (n < 20) return SMALL[n];
   if (n < 100) {
     const tens = TENS[Math.floor(n / 10)];

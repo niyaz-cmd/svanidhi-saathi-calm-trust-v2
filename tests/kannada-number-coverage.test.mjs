@@ -56,3 +56,46 @@ test('every 0–999 suffix survives each supported larger place',()=>{
       assert.equal(readKannadaAmountWords(moneySpeechText(`₹${n}`,'kn')),n*100,`₹${n}`);
     }
 });
+
+test('all 0–99,999 spoken confirmations are understood as the same amount', async()=>{
+  const {parseCurrencyAmount}=await import('../src/core/speech-parser.mjs');
+  for(let n=0;n<100000;n++) {
+    const transcript=moneySpeechText(`₹${n}`,'kn');
+    assert.equal(parseCurrencyAmount(transcript,{language:'kn'}).amount,n,transcript);
+  }
+});
+
+test('larger Kannada words preserve value and ambiguous or negative money is rejected',async()=>{
+  const {parseCurrencyAmount}=await import('../src/core/speech-parser.mjs');
+  for(const n of [1024,1320,7080,8400,100024,10000024,999999999])
+    assert.equal(parseCurrencyAmount(moneySpeechText(`₹${n}`,'kn'),{language:'kn'}).amount,n);
+  assert.equal(parseCurrencyAmount('ನಾನೂರ ಇಪ್ಪತ್ತನಾಲ್ಕು ರೂಪಾಯಿ',{language:'kn'}).amount,424);
+  for(const text of ['ಇಪ್ಪತ್ತನಾಲ್ಕು ಅಥವಾ ಇಪ್ಪತ್ತೈದು','ಮೈನಸ್ ಇಪ್ಪತ್ತನಾಲ್ಕು ರೂಪಾಯಿ','-₹24','₹-24'])
+    assert.equal(parseCurrencyAmount(text,{language:'kn'}).amount,null,text);
+});
+
+test('mixed digits and Kannada scales count each numeric token once',async()=>{
+  const {parseCurrencyAmount}=await import('../src/core/speech-parser.mjs');
+  for(const [text,n] of [['1 ಕೋಟಿಯ 24 ರೂಪಾಯಿ',10000024],['99 ಕೋಟಿಯ 99 ಲಕ್ಷದ 99 ಸಾವಿರದ 999 ರೂಪಾಯಿ',999999999],['1 ಸಾವಿರದ 24 ರೂಪಾಯಿ',1024]])
+    assert.equal(parseCurrencyAmount(text,{language:'kn'}).amount,n,text);
+  assert.equal(parseCurrencyAmount('24 ಅಥವಾ 1 ಸಾವಿರದ 24 ರೂಪಾಯಿ',{language:'kn'}).amount,null);
+});
+
+test('live-audit checker understands contracted hundreds and mixed digit/word scales',async()=>{
+ const {extractAuditAmounts}=await import('./fixtures/kannada-cardinals.mjs');
+ assert.deepEqual(extractAuditAmounts('ಮೊತ್ತ ಏಳುನೂರು ರೂಪಾಯಿ.'),[700]);
+ assert.deepEqual(extractAuditAmounts('ಮೊತ್ತ 99 ಕೋಟಿಯ 99 ಲಕ್ಷದ 99 ಸಾವಿರದ 999 ರೂಪಾಯಿ.'),[999999999]);
+ assert.deepEqual(extractAuditAmounts('ಮೊತ್ತ ಮೈನಸ್ ನೂರ ಇಪ್ಪತ್ತನಾಲ್ಕು ರೂಪಾಯಿ.'),[-124]);
+});
+
+test('actual Sarvam hundred contractions preserve the entire amount',async()=>{
+ const {parseCurrencyAmount}=await import('../src/core/speech-parser.mjs');
+ for(const [text,n] of [['ನಾಲ್ಕುನೂರು',400],['ನಾಲ್ಕುನೂರ ಒಂದು',401],['ಆರುನೂರ ಇಪ್ಪತ್ತನಾಲ್ಕು',624],['ಏಳುನೂರ ತೊಂಬತ್ತೊಂಬತ್ತು',799],['ಒಂಬತ್ತುನೂರೊಂದು',901],['ಒಂಬತ್ತುನೂರಇಪ್ಪತ್ತನಾಲ್ಕು',924],['ಒಂಬತ್ತುನೂರತೊಂಬತ್ತೊಂಬತ್ತು',999],['ತೊಂಬತ್ತೊಂಬತ್ತು ಸಾವಿರದ ಒಂಬೈನೂರ ತೊಂಬತ್ತೊಂಬತ್ತು',99999]])
+   assert.equal(parseCurrencyAmount(text+' ರೂಪಾಯಿ',{language:'kn'}).amount,n,text);
+});
+
+test('separate numeric phrases are never merged across punctuation',async()=>{
+ const {parseCurrencyAmount}=await import('../src/core/speech-parser.mjs');
+ for(const text of ['24, ಒಂದು ರೂಪಾಯಿ','ಒಂದು ನೂರು; ಇಪ್ಪತ್ತನಾಲ್ಕು','1 ಸಾವಿರ. 24 ರೂಪಾಯಿ'])
+   assert.equal(parseCurrencyAmount(text,{language:'kn'}).amount,null,text);
+});
