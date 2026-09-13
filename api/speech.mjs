@@ -74,6 +74,7 @@ export default async function handler(request, response) {
     const providerStartedAt = Date.now();
     const upstream = await fetch('https://api.sarvam.ai/text-to-speech', {
       method:'POST',
+      signal:AbortSignal.timeout(20000),
       headers:{
         'Content-Type':'application/json',
         'Accept':'application/json',

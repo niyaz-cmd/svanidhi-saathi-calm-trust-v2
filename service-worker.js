@@ -1,7 +1,7 @@
-const CACHE = 'saathi-field-v0.5.3';
+const CACHE = 'saathi-field-v0.6.0';
 const APP_SHELL = [
   '/', '/index.html', '/styles.css', '/manifest.webmanifest', '/public/icons/icon.svg',
-  '/src/app.mjs', '/src/ui/icons.mjs', '/src/core/finance-engine.mjs', '/src/core/speech-parser.mjs',
+  '/src/app.mjs', '/src/core/privacy-store.mjs', '/src/ui/privacy-copy.mjs', '/src/ui/icons.mjs', '/src/core/finance-engine.mjs', '/src/core/speech-parser.mjs',
   '/src/core/research-events.mjs', '/src/core/device-capabilities.mjs', '/src/core/voice-flow.mjs',
   '/src/core/voice-copy.mjs', '/src/core/activity-store.mjs', '/src/core/ledger-store.mjs', '/src/core/audio-capture.mjs', '/src/core/money-speech.mjs'
 ];
@@ -10,7 +10,7 @@ self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('saathi-field-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', event => {
   const url = new URL(event.request.url);

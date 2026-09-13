@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { preloadSpeech, speak, startSpeechRecognition } from '../src/core/device-capabilities.mjs';
+import { preloadSpeech, speak, startSpeechRecognition, stopSpeech } from '../src/core/device-capabilities.mjs';
 
 function recognitionResult(transcript, isFinal) {
   const result = [{ transcript }];
@@ -251,6 +251,33 @@ test('preloaded Sarvam audio is reused when the conversational prompt plays', as
     assert.equal(fetchCount, 1);
     assert.equal(result.ok, true);
     assert.equal(result.provider, 'sarvam-bulbul-v3');
+  } finally {
+    for (const [key, value] of Object.entries(originals)) {
+      if (value === undefined) delete globalThis[key];
+      else Object.defineProperty(globalThis, key, { configurable:true, writable:true, value });
+    }
+  }
+});
+
+test('withdrawing voice stops a pending provider request before playback', async () => {
+  const originals = { navigator:globalThis.navigator, fetch:globalThis.fetch, AudioContext:globalThis.AudioContext };
+  let requestSignal;
+  class FakeAudioContext {
+    constructor() { this.state = 'running'; this.destination = {}; }
+  }
+  Object.defineProperty(globalThis, 'navigator', { configurable:true, value:{ onLine:true } });
+  globalThis.AudioContext = FakeAudioContext;
+  globalThis.fetch = (_url, options) => {
+    requestSignal = options.signal;
+    return new Promise((_resolve, reject) => requestSignal.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')), { once:true }));
+  };
+  try {
+    const pending = speak('Stop this request', 'en');
+    await new Promise((resolve) => setImmediate(resolve));
+    stopSpeech();
+    const result = await pending;
+    assert.equal(requestSignal.aborted, true);
+    assert.equal(result.provider, 'cancelled');
   } finally {
     for (const [key, value] of Object.entries(originals)) {
       if (value === undefined) delete globalThis[key];

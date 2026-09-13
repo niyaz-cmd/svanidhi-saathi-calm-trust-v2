@@ -211,3 +211,13 @@ textarea.input{min-height:86px;resize:vertical}
 .daily-net { color: var(--green, #17664d); font-size: 1.25rem; }
 @keyframes ledger-reveal { from { opacity: .4; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 @media (prefers-reduced-motion: reduce) { .daily-ledger { animation: none; } }
+
+/* Privacy controls stay readable at narrow widths and large text settings. */
+.privacy-choices { display:grid; gap:14px; }
+.privacy-choices .task-check { font-size:17px; align-items:center; min-height:48px; }
+.privacy-choices input { width:24px; height:24px; flex:0 0 24px; accent-color:var(--green-900); }
+.card p { overflow-wrap:anywhere; }
+.card a { color:var(--green-900); display:inline-block; padding:12px 0; overflow-wrap:anywhere; }
+.danger { color:var(--danger); }
+.btn.primary.danger { background:var(--danger); color:white; }
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible { outline:3px solid var(--green-800); outline-offset:3px; }

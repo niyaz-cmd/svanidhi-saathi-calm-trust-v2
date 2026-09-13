@@ -57,7 +57,7 @@ test('shows the complete payment calculation and does not claim on-track status'
 
 test('implements the v0.5 ledger with preserved conversational amount confirmation sequence', () => {
   const serviceWorker = fs.readFileSync(new URL('../service-worker.js', import.meta.url), 'utf8');
-  assert.match(app, /prototype_v0\.5/);
+  assert.match(app, /prototype_v0\.6/);
   assert.match(app, /new VoiceAudioCapture/);
   assert.match(app, /transcribeRecordedAudio/);
   assert.doesNotMatch(app, /startSpeechRecognition\(\{/);
@@ -78,4 +78,21 @@ test('logs every required privacy-safe v0.4 Voice First research event', () => {
     'amount_rejected', 'final_record_confirmed', 'persistence_success', 'persistence_failure'
   ]) assert.match(app, new RegExp(`log\\('${eventName}'`));
   assert.doesNotMatch(app, /transcription_finished[^\n]*transcript/);
+});
+
+test('requires explicit privacy choices and exposes user controls in all three languages', () => {
+  const privacyStore = fs.readFileSync(new URL('../src/core/privacy-store.mjs', import.meta.url), 'utf8');
+  const privacyCopy = fs.readFileSync(new URL('../src/ui/privacy-copy.mjs', import.meta.url), 'utf8');
+  assert.match(app, /privacy:privacyScreen/);
+  assert.match(app, /voiceAllowed\(\)/);
+  assert.match(app, /data-action="export-data"/);
+  assert.match(app, /data-action="delete-data"/);
+  assert.match(privacyCopy, /Formetry Labs/);
+  assert.match(app, /niyaz@in60z\.com/);
+  assert.match(app, /prototype_v0\.6/);
+  assert.match(privacyStore, /voice:false, research:false/);
+  assert.match(privacyStore, /scope:'Saathi data on this browser only'/);
+  assert.match(privacyCopy, /Your choices\. Your data\./);
+  assert.match(privacyCopy, /आपकी पसंद। आपका डेटा।/);
+  assert.match(privacyCopy, /ನಿಮ್ಮ ಆಯ್ಕೆ\. ನಿಮ್ಮ ಮಾಹಿತಿ\./);
 });

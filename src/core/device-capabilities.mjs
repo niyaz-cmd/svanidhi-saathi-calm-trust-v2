@@ -12,6 +12,7 @@ let audioContext = null;
 let speechSequence = 0;
 let activeDeviceFinish = null;
 const speechAudioCache = new Map();
+const speechRequests = new Set();
 const MAX_CACHED_PROMPTS = 12;
 
 export function speechRecognitionSupported() {
@@ -115,6 +116,9 @@ function stopCurrentSpeech() {
 
 export function stopSpeech() {
   stopCurrentSpeech();
+  for (const controller of speechRequests) controller.abort();
+  speechRequests.clear();
+  speechAudioCache.clear();
 }
 
 function speakWithDevice(text, lang = 'en') {
@@ -146,8 +150,9 @@ async function prepareAudioContext() {
   return audioContext;
 }
 
-async function playAudioBuffer(context, buffer, onStarted = () => {}) {
+async function playAudioBuffer(context, buffer, onStarted = () => {}, isCurrent = () => true) {
   const decoded = await context.decodeAudioData(buffer);
+  if (!isCurrent()) return;
   await new Promise((resolve) => {
     const source = context.createBufferSource();
     source.buffer = decoded;
@@ -168,6 +173,7 @@ function speechCacheKey(text, lang) {
 
 function requestSarvamAudio(text, lang) {
   const controller = new AbortController();
+  speechRequests.add(controller);
   const timeout = setTimeout(() => controller.abort(), 15000);
   return (async () => {
     try {
@@ -183,6 +189,7 @@ function requestSarvamAudio(text, lang) {
       return null;
     } finally {
       clearTimeout(timeout);
+      speechRequests.delete(controller);
     }
   })();
 }
@@ -225,9 +232,10 @@ export async function speak(text, lang = 'en') {
   if (online && globalThis.fetch && context) {
     try {
       const audio = await sarvamAudio(value, lang);
+      if (callId !== speechSequence) return { ok:false, provider:'cancelled' };
       if (audio) {
         let audioStartMs = 0;
-        await playAudioBuffer(context, audio.slice(0), () => { audioStartMs = Date.now() - startedAt; });
+        await playAudioBuffer(context, audio.slice(0), () => { audioStartMs = Date.now() - startedAt; }, () => callId === speechSequence);
         if (callId !== speechSequence) return { ok:false, provider:'cancelled', audioStartMs, durationMs:Date.now() - startedAt };
         return { ok:true, provider:'sarvam-bulbul-v3', audioStartMs, durationMs:Date.now() - startedAt };
       }

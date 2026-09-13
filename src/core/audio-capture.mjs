@@ -165,13 +165,14 @@ export class VoiceAudioCapture {
   }
 }
 
-export async function transcribeRecordedAudio(audio, language = 'en', { fetchImpl = globalThis.fetch } = {}) {
+export async function transcribeRecordedAudio(audio, language = 'en', { fetchImpl = globalThis.fetch, signal } = {}) {
   if (!audio?.size || typeof fetchImpl !== 'function') return { ok:false, transcript:'', provider:'none' };
   try {
     const response = await fetchImpl(`/api/transcribe?language=${encodeURIComponent(language)}`, {
       method:'POST',
       headers:{ 'Content-Type':audio.type || 'audio/webm' },
-      body:audio
+      body:audio,
+      signal:signal ? AbortSignal.any([signal, AbortSignal.timeout(30000)]) : AbortSignal.timeout(30000)
     });
     if (!response.ok) return { ok:false, transcript:'', provider:'sarvam-unavailable' };
     const data = await response.json();

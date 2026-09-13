@@ -1,8 +1,14 @@
-# SVANidhi Saathi — Daily Money Memory v0.5
+# SVANidhi Saathi — Daily Money Memory v0.6
 
 A field-grade prototype for testing the SVANidhi Saathi interaction with street vendors. It is a mobile-first Progressive Web App designed for Android Chrome.
 
-## Added in v0.5
+## Added in v0.6
+- Multilingual first-use privacy notice with separate optional choices for online voice and research notes.
+- Settings for language, privacy choices, local-data export, research withdrawal, and deletion.
+- Formetry Labs privacy contact and explicit independent-prototype positioning.
+- Pending voice requests stop when the user withdraws voice permission or leaves the voice flow.
+
+## Preserved from v0.5
 - First-use spoken onboarding and returning-user greeting in Kannada, Hindi, and English.
 - Confirmed transaction ledger with cumulative Money in, Business spending, and Net today.
 - Append-only corrections, duplicate-confirmation protection, and legacy activity migration.
@@ -55,18 +61,20 @@ The interaction system originated in the approved Calm Trust design: https://www
 
 ## Field flow
 1. Choose language.
-2. Review trust-before-data screen.
-3. Home → Tell Saathi about today.
-4. Hear the greeting and sales question; speech recognition starts only after playback and a short echo guard.
-5. Speak or type one sales amount, then confirm Saathi's repeat-back.
-6. Speak or type one business-spending amount, then confirm Saathi's repeat-back.
-7. Review/edit both sequentially revealed fields and explicitly confirm the final record.
-8. View deterministic reserve guidance.
-9. Photograph the printed fictional test statement.
-10. Choose `Read test bill` or `Test uncertain read`.
-11. Review amount/date/action and source provenance.
-12. Ask bounded questions.
-13. Open **Research** to mark tasks and export participant data.
+2. Review the safety screen.
+3. Review the privacy notice; independently choose online voice and research notes. Manual entry works without voice.
+4. Home → Tell Saathi about today.
+5. Hear the greeting and sales question; speech recognition starts only after playback and a short echo guard.
+6. Speak or type one sales amount, then confirm Saathi's repeat-back.
+7. Speak or type one business-spending amount, then confirm Saathi's repeat-back.
+8. Review/edit both sequentially revealed fields and explicitly confirm the final record.
+9. View deterministic reserve guidance.
+10. Photograph the printed fictional test statement.
+11. Choose `Read test bill` or `Test uncertain read`.
+12. Review amount/date/action and source provenance.
+13. Ask bounded questions.
+14. If research was enabled, open **Research** to mark tasks and export the session.
+15. Open **Settings & your data** to change choices, export all Saathi browser data, or delete it.
 
 ## Demo mode
 Open **Research** → switch to **Demo**. The Voice screen then includes `Use demo voice`, which guarantees a working judge/government demo even if device speech recognition is unavailable.
@@ -75,7 +83,7 @@ Open **Research** → switch to **Demo**. The Voice screen then includes `Use de
 The current Kannada is a design-language draft and must be reviewed by a native Kannada speaker before formal vendor testing. The product should not treat generated/localized copy as field-ready without that review.
 
 ## Persistence and research data
-Confirmed activity and privacy-filtered research events stay in the browser's local storage. Raw transcripts and unconfirmed money values are never written to persistent storage. There is no configured database, authenticated write API, schema, or cloud-sync credential in this project, so v0.4 remains local-only. A true database implementation still requires those backend decisions and configuration. Export each research session as JSON before clearing browser data.
+Confirmed activity stays in browser storage after the user accepts the first-use notice. Research events and notes are stored only when the separate research choice is enabled. Raw transcripts, voice recordings, bill photos, and unconfirmed money values are never written to persistent application storage. There is no configured database, authenticated write API, schema, cloud backup, account recovery, or cloud-sync credential. A true account implementation requires those backend and operational decisions. Users can export all Saathi-prefixed browser records or delete them in **Settings & your data**. See [prototype readiness](docs/PROTOTYPE_READINESS.md) for the data map and pre-pilot gates.
 
 ## Test
 ```bash

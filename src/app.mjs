@@ -6,6 +6,8 @@ import { audioCaptureSupported, VoiceAudioCapture, transcribeRecordedAudio } fro
 import { createConversationalVoiceWorkflow, runPromptThenListen } from './core/voice-flow.mjs';
 import { VOICE_CONVERSATION_COPY } from './core/voice-copy.mjs';
 import { loadLedger, appendConfirmedRecord, correctEntry, dailyTotals, effectiveAmount } from './core/ledger-store.mjs';
+import { readPrivacy, savePrivacy, defaultPrivacy, exportLocalData, deleteLocalData, deleteResearchData, NOTICE_VERSION } from './core/privacy-store.mjs';
+import { PRIVACY_COPY } from './ui/privacy-copy.mjs';
 import { icon } from './ui/icons.mjs';
 
 const COPY = {
@@ -72,6 +74,9 @@ const root = document.querySelector('#app');
 const toastNode = document.querySelector('#toast');
 
 const state = {
+  privacy: defaultPrivacy(),
+  privacyDraft: null,
+  privacyError: '',
   screen: 'language',
   language: 'kn',
   mode: 'field',
@@ -108,6 +113,8 @@ const state = {
   research: { tasks:Array(9).fill(false), helpNeeded:false, trustConcern:'', wouldUseAgain:'', quote:'', notes:'' }
 };
 
+const pc = (key) => PRIVACY_COPY[state.language]?.[key] ?? PRIVACY_COPY.en[key];
+const voiceAllowed = () => Boolean(readPrivacy(localStorage).acceptedAt && readPrivacy(localStorage).voice);
 const t = (key) => VOICE_V03_COPY[state.language]?.[key] ?? COPY[state.language]?.[key] ?? VOICE_V03_COPY.en[key] ?? COPY.en[key] ?? key;
 const lt = (kn, hi, en) => state.language === 'kn' ? kn : state.language === 'hi' ? hi : en;
 const money = (value) => new Intl.NumberFormat('en-IN', { style:'currency', currency:'INR', maximumFractionDigits:0 }).format(value);
@@ -119,16 +126,19 @@ function loadLocal() {
   catch { state.ledgerError = true; }
 }
 loadLocal();
+state.privacy = readPrivacy(localStorage);
+if (state.privacy.acceptedAt) { state.language = state.privacy.language; state.screen = 'home'; }
 
 const voiceWorkflow = createConversationalVoiceWorkflow({
   persist:async (record) => {
-    const write = () => { state.ledger = appendConfirmedRecord(localStorage, record, state.entryBatchId); };
+    const write = () => { if (!readPrivacy(localStorage).acceptedAt) throw Error('Consent required'); state.ledger = appendConfirmedRecord(localStorage, record, state.entryBatchId); };
     if (navigator.locks) await navigator.locks.request('saathi-ledger', write);
     else write();
   }
 });
 
 function log(name, payload = {}) {
+  if (!readPrivacy(localStorage).research) return;
   const event = createResearchEvent({ sessionId:state.session.id, mode:state.mode, language:state.language, name, payload });
   state.events.push(event);
   try { localStorage.setItem(`saathi:events:${state.session.id}`, JSON.stringify(state.events)); } catch {}
@@ -186,12 +196,42 @@ function trustScreen() {
   </main>`;
 }
 
+function privacyScreen() {
+  const settings = state.screen === 'settings';
+  const draft = state.privacyDraft ?? state.privacy;
+  return `<main class="screen">${header({back:true})}
+    <h1>${pc(settings ? 'settings' : 'title')}</h1><p class="lede">${pc('intro')}</p>
+    <section class="card soft"><p>${pc('prototype')}</p></section>
+    <section class="card"><h3>${pc('localTitle')}</h3><p>${pc('local')}</p></section>
+    <section class="card privacy-choices">
+      <label class="task-check"><input type="checkbox" data-privacy="voice" ${draft.voice ? 'checked' : ''}><span><strong>${pc('voiceTitle')}</strong></span></label><p>${pc('voice')}</p>
+      <label class="task-check"><input type="checkbox" data-privacy="research" ${draft.research ? 'checked' : ''}><span><strong>${pc('researchTitle')}</strong></span></label><p>${pc('research')}</p>
+    </section>
+    <p class="support">${pc('controls')}</p>
+    ${state.privacyError ? `<p role="alert" class="card warning">${escapeHtml(state.privacyError)}</p>` : ''}
+    <button class="btn primary full" data-action="save-privacy">${pc(settings ? 'save' : 'accept')}</button>
+    ${!settings ? `<button class="btn secondary full" data-action="decline-privacy">${pc('decline')}</button>` : ''}
+    <section class="card"><h3>${pc('language')}</h3><div class="language-list">${[['kn','ಕನ್ನಡ'],['hi','हिन्दी'],['en','English']].map(([code,label])=>`<button class="lang-card ${state.language===code?'selected':''}" data-language="${code}">${label}</button>`).join('')}</div></section>
+    <section class="card"><h3>${pc('account')}</h3><p>${pc('exportHint')}</p><button class="btn secondary full" data-action="export-data">${pc('export')}</button><button class="btn secondary full danger" data-action="delete-data">${pc('remove')}</button></section>
+    <section class="card"><h3>${pc('help')}</h3><p>${pc('contact')}</p><a href="mailto:niyaz@in60z.com">niyaz@in60z.com</a><p class="support">${pc('infrastructure')}</p></section>
+    <p class="support">${pc('receipt')}: ${NOTICE_VERSION}${state.privacy.acceptedAt ? ` · ${escapeHtml(state.privacy.updatedAt)}` : ''}<br>${pc('version')}</p>
+  </main>`;
+}
+function deleteScreen() {
+  return `<main class="screen">${header()}<h1>${pc('deleteTitle')}</h1><p class="lede">${pc('deleteHint')}</p>${state.privacyError ? `<p role="alert">${escapeHtml(state.privacyError)}</p>` : ''}<button class="btn secondary full" data-action="export-data">${pc('export')}</button><button class="btn primary full danger" data-action="confirm-delete-data">${pc('confirmDelete')}</button><button class="btn secondary full" data-action="open-settings">${pc('cancel')}</button></main>`;
+}
+function declinedScreen() {
+  return `<main class="screen">${header()}<h1>${pc('privacy')}</h1><p class="lede">${pc('declined')}</p><button class="btn secondary full" data-action="review-privacy">${pc('review')}</button></main>`;
+}
+
 function homeScreen() {
   const r = reserve();
   loadLocal();
   return `<main class="screen">
     ${header()}
-    <div><h2>${t('greeting')}</h2><p class="support" style="margin-top:4px">${t('morning')}</p></div>
+    <div><h2>${pc('greeting')}</h2><p class="support" style="margin-top:4px">${t('morning')}</p></div>
+    <button class="btn secondary full" data-action="open-settings">${pc('settings')}</button>
+    <p class="support">${pc('intro')}</p>
     ${ledgerCard()}
     <section class="hero-card">
       <p class="support">${lt('ಉದಾಹರಣೆ ಪಾವತಿ ಯೋಜನೆ','उदाहरण भुगतान योजना','Example payment plan')}</p>
@@ -225,10 +265,11 @@ function voiceScreen() {
   return `<main class="screen">
     ${header({back:true})}
     <h1>${title}</h1><p class="lede">${support}</p>
+    ${!voiceAllowed() ? `<section class="card soft"><p>${pc('voiceOff')}</p><button class="btn secondary full" data-action="open-settings">${pc('settings')}</button></section>` : ''}
     <section class="voice-question-card">${icon('help',24,true)}<p>${question}</p></section>
     ${confirming ? `<section class="transcript-card" aria-live="polite"><span class="amount-kicker">${isCollection ? copy.collectionLabel : copy.investmentLabel}</span><div class="heard-amount">${money(state.pendingAmount)}</div><blockquote>${escapeHtml(state.transcript)}</blockquote></section><button class="btn primary full push" data-action="confirm-amount" ${state.speaking?'disabled':''}>${icon('check',20,true)} ${copy.yesCorrect}</button><button class="btn secondary full" data-action="reject-amount" ${state.speaking?'disabled':''}>${copy.noRepeat}</button>` : `<div class="mic-stage">
       <div class="wave ${state.listening||state.speaking?'active':''}" aria-hidden="true">${'<span></span>'.repeat(7)}</div>
-      <button class="mic-button ${state.listening?'listening':''}" data-action="start-voice" aria-label="${t('startListening')}" ${(state.listening||waiting)?'disabled aria-pressed="true"':''}>${icon(state.speaking?'volume':'mic',44)}</button>
+      <button class="mic-button ${state.listening?'listening':''}" data-action="start-voice" aria-label="${t('startListening')}" ${(!voiceAllowed()||state.listening||waiting)?'disabled aria-pressed="true"':''}>${icon(state.speaking?'volume':'mic',44)}</button>
       <strong>${state.speaking ? t('voiceSpeaking') : state.listening ? t('listening') : copy.tapToRetry}</strong>
     </div>
     ${state.listening ? `<section class="live-transcript" aria-live="polite"><span>${lt('ಸಾಥಿ ಎಚ್ಚರಿಕೆಯಿಂದ ಕೇಳುತ್ತಿದೆ','साथी ध्यान से सुन रहा है','Saathi is listening carefully')}</span><p>${lt('ಮಾತನಾಡಿ — ಮುಗಿದ ನಂತರ ಸಾಥಿ ನಿಮ್ಮ ಮಾತನ್ನು ತೋರಿಸುತ್ತದೆ.','बोलिए — पूरा होने पर साथी आपकी बात दिखाएगा।','Speak naturally — Saathi will show the transcript when you finish.')}</p></section><button class="btn saffron full" data-action="finish-voice">${icon('check',20,true)} ${t('done')}</button>` : ''}
@@ -342,6 +383,7 @@ function uncertainScreen() {
 
 function researchDrawer() {
   if (!state.researchOpen) return '';
+  if (!readPrivacy(localStorage).research) return `<div class="drawer-backdrop"><aside class="drawer" role="dialog" aria-modal="true" aria-label="Research controls"><h2>${pc('researchTitle')}</h2><p>${pc('research')}</p><button class="btn secondary full" data-action="close-research">${t('close')}</button><button class="btn primary full" data-action="open-settings">${pc('settings')}</button></aside></div>`;
   const taskNames = ['Start without coaching','Complete voice entry','Confirm money','Find amount due','Find due date','Explain minimum due','Handle uncertain read','Find source/provenance','Understand offline limits'];
   return `<div class="drawer-backdrop" data-action="close-research"><aside class="drawer" role="dialog" aria-modal="true" aria-label="Research controls" data-drawer>
     <div class="drawer-header"><div><p class="kicker">Operator controls</p><h2>Research session</h2></div><button class="btn icon-only secondary" data-action="close-research" aria-label="Close">×</button></div>
@@ -357,15 +399,19 @@ function escapeHtml(value='') {
 }
 
 function screenHtml() {
-  const map = { language:welcomeScreen, trust:trustScreen, home:homeScreen, voice:voiceScreen, confirm:confirmScreen, guidance:guidanceScreen, billCapture:billCaptureScreen, billExplained:billExplainedScreen, ask:askScreen, activity:activityScreen, offline:offlineScreen, uncertain:uncertainScreen };
+  const map = { privacy:privacyScreen, settings:privacyScreen, deleteData:deleteScreen, declined:declinedScreen, language:welcomeScreen, trust:trustScreen, home:homeScreen, voice:voiceScreen, confirm:confirmScreen, guidance:guidanceScreen, billCapture:billCaptureScreen, billExplained:billExplainedScreen, ask:askScreen, activity:activityScreen, offline:offlineScreen, uncertain:uncertainScreen };
   return (map[state.screen] ?? homeScreen)();
 }
 
 function render() {
+  document.documentElement.lang = state.language;
   root.innerHTML = `<div class="phone" data-language="${state.language}">${!state.online ? `<div class="offline-banner">${icon('wifiOff',16)} ${t('offlineSupport')} <button class="chip" data-action="offline-screen" style="min-height:30px;padding:4px 8px">${lt('ವಿವರ','विवरण','Details')}</button></div>` : ''}${screenHtml()}${researchDrawer()}</div>`;
 }
 
 function go(screen) {
+  if (screen !== state.screen) { stopSpeech(); state.speaking=false; }
+  if (state.screen === 'voice' && screen !== 'voice') { state.conversationRun += 1; stopActiveCapture(); stopSpeech(); state.listening=false; state.speaking=false; }
+  if (!readPrivacy(localStorage).acceptedAt && !['language','trust','privacy','declined','deleteData'].includes(screen)) screen = 'privacy';
   state.screen = screen;
   state.sourceOpen = false;
   state.whyOpen = false;
@@ -386,6 +432,7 @@ function paymentExplanationText() {
 }
 
 async function playSaathiSpeech(text, eventName) {
+  if (!voiceAllowed()) return { ok:false, provider:'consent-disabled' };
   state.speaking = true;
   render();
   notify(t('voicePreparing'));
@@ -439,9 +486,12 @@ function answerFor(index) {
 }
 
 let audioCapture = null;
+let transcriptionController = null;
 let revealTimers = [];
 
 function stopActiveCapture() {
+  transcriptionController?.abort();
+  transcriptionController=null;
   const capture = audioCapture;
   audioCapture = null;
   try { capture?.cancel(); } catch {}
@@ -480,6 +530,7 @@ function confirmationFor(turn, amount) {
 }
 
 function preloadConversationSpeech() {
+  if (!voiceAllowed()) return Promise.resolve(0);
   const copy = voiceCopy();
   return preloadSpeech([state.ledger.onboarding_completed ? copy.greeting : copy.onboarding, copy.collectionQuestion, copy.investmentQuestion], state.language);
 }
@@ -511,6 +562,7 @@ async function startVoiceConversation() {
 
 async function startListeningTurn(turn, run = state.conversationRun) {
   if (!conversationIsActive(run)) return;
+  if (!voiceAllowed()) { state.voicePhase='idle'; render(); return; }
   if (!audioCaptureSupported()) {
     state.voicePhase = 'idle';
     render();
@@ -564,7 +616,9 @@ async function finishListeningTurn(turn, { reason = 'manual', transcript = '', a
     render();
     const transcriptionStartedAt = Date.now();
     log('transcription_started', { turn, provider:'sarvam-saaras-v4' });
-    const transcription = await transcribeRecordedAudio(audio, state.language);
+    if (!voiceAllowed()) return;
+    transcriptionController = new AbortController();
+    const transcription = await transcribeRecordedAudio(audio, state.language, {signal:transcriptionController.signal});
     log('transcription_finished', {
       turn,
       provider:transcription.provider,
@@ -632,8 +686,36 @@ root.addEventListener('click', async (event) => {
   }
 
   switch(button.dataset.action) {
+    case 'open-settings': state.researchOpen=false; state.privacyDraft={...state.privacy}; state.privacyError=''; go('settings'); break;
+    case 'review-privacy': state.privacyDraft={...state.privacy}; go('privacy'); break;
+    case 'decline-privacy': state.privacyDraft=null; go('declined'); break;
+    case 'save-privacy': {
+      try {
+        const draft=state.privacyDraft ?? state.privacy;
+        state.privacy=savePrivacy(localStorage,{language:state.language,voice:draft.voice,research:draft.research});
+        if (!state.privacy.voice) { stopActiveCapture(); stopSpeech(); }
+        if (!state.privacy.research) { deleteResearchData(localStorage); state.events=[]; state.research={tasks:Array(9).fill(false),helpNeeded:false,trustConcern:'',wouldUseAgain:'',quote:'',notes:''}; }
+        state.privacyDraft=null; state.privacyError=''; go('home'); notify(pc('saved'));
+      } catch { state.privacyError=pc('error'); render(); }
+      break;
+    }
+    case 'export-data': {
+      try { downloadJson(exportLocalData(localStorage),'saathi-my-data.json'); }
+      catch { notify(pc('error')); }
+      break;
+    }
+    case 'delete-data': state.privacyError=''; go('deleteData'); break;
+    case 'confirm-delete-data': {
+      stopActiveCapture(); stopSpeech(); state.conversationRun+=1;
+      try {
+        const remove=()=>deleteLocalData(localStorage);
+        if(navigator.locks) await navigator.locks.request('saathi-ledger',remove); else remove();
+        location.reload();
+      } catch { state.privacy=defaultPrivacy(); state.privacyError=pc('deleteError'); render(); }
+      break;
+    }
     case 'continue-trust': go('trust'); break;
-    case 'trust-accept': log('trust_accepted'); go('home'); void preloadConversationSpeech(); break;
+    case 'trust-accept': state.privacyDraft={...state.privacy}; go('privacy'); break;
     case 'change-language': go('language'); break;
     case 'operator-tap': state.operatorTapCount += 1; if (state.operatorTapCount >= 5) { state.operatorTapCount=0; state.researchOpen=true; log('operator_unlocked'); render(); } break;
     case 'back': historyBack(); break;
@@ -646,7 +728,7 @@ root.addEventListener('click', async (event) => {
       if(state.saving) break; state.saving=true;
       try {
         const id=state.correctionId; const correction=crypto.randomUUID();
-        const write=()=>{ state.ledger=correctEntry(localStorage,id,Number(raw),correction); };
+        const write=()=>{ if(!readPrivacy(localStorage).acceptedAt) throw Error('Consent required'); state.ledger=correctEntry(localStorage,id,Number(raw),correction); };
         if(navigator.locks) await navigator.locks.request('saathi-ledger',write); else write();
         state.correctionId=null; render();
       } catch { notify(t('saveFailed')); } finally { state.saving=false; }
@@ -790,12 +872,16 @@ root.addEventListener('change', (event) => {
     saveResearch();
   }
 });
+root.addEventListener('change', (event) => {
+  const field=event.target.dataset.privacy;
+  if (['voice','research'].includes(field)) { state.privacyDraft ??= {...state.privacy}; state.privacyDraft[field]=event.target.checked; }
+});
 root.addEventListener('input', (event) => {
   const field = event.target.dataset.researchField;
   if (field && event.target.tagName==='TEXTAREA') { state.research[field]=event.target.value; saveResearch(); }
 });
 
-function saveResearch(){ try{localStorage.setItem(`saathi:research:${state.session.id}`,JSON.stringify(state.research));}catch{} }
+function saveResearch(){ if(!readPrivacy(localStorage).research) return; try{localStorage.setItem(`saathi:research:${state.session.id}`,JSON.stringify(state.research));}catch{} }
 function historyBack(){
   if (state.screen === 'voice') {
     state.conversationRun += 1;
@@ -804,10 +890,15 @@ function historyBack(){
     state.listening = false;
     state.speaking = false;
   }
-  const fallbacks={trust:'language',voice:'home',confirm:'home',guidance:'home',billCapture:'home',billExplained:'billCapture',uncertain:'billCapture',offline:'home'};
+  const fallbacks={privacy:'trust',settings:'home',deleteData:'settings',trust:'language',voice:'home',confirm:'home',guidance:'home',billCapture:'home',billExplained:'billCapture',uncertain:'billCapture',offline:'home'};
   go(fallbacks[state.screen]||'home');
 }
+function downloadJson(value, filename) {
+  const url=URL.createObjectURL(new Blob([JSON.stringify(value,null,2)],{type:'application/json'}));
+  const a=document.createElement('a'); a.href=url; a.download=filename; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
 function exportSession(){
+  if (!readPrivacy(localStorage).research) { notify(pc('researchTitle')); return; }
   const text=serializeSession({session:{...state.session,mode:state.mode,language:state.language,research:state.research},events:state.events});
   const blob=new Blob([text],{type:'application/json'}); const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=`svanidhi-saathi-${state.session.id}.json`; a.click(); setTimeout(()=>URL.revokeObjectURL(url),1000); log('session_exported'); notify('Research session exported.');
 }
@@ -816,9 +907,17 @@ function newSession(){
   resetVoiceConversation(); state.session={id:newSessionId(),startedAt:new Date().toISOString()}; state.events=[]; state.research={tasks:Array(9).fill(false),helpNeeded:false,trustConcern:'',wouldUseAgain:'',quote:'',notes:''}; state.researchOpen=false; state.screen='language'; state.listening=false; state.speaking=false; state.voiceIntroduced=false; state.transcript=''; state.parsed={sales:null,stock:null,confidence:'low',rawNumbers:[],requiresReview:true}; state.structuredReveal=0; state.photoUrl=null; state.billRead='none'; state.question=null; state.answer=null; render();
 }
 
+window.addEventListener('storage', (event) => {
+  if (event.key === null || event.key.startsWith('saathi:')) {
+    state.privacy=readPrivacy(localStorage);
+    if (!state.privacy.acceptedAt || !state.privacy.voice) { state.conversationRun+=1; stopActiveCapture(); stopSpeech(); state.listening=false; state.speaking=false; state.voicePhase='idle'; }
+    if (!state.privacy.acceptedAt) { state.privacyDraft=null; state.events=[]; state.researchOpen=false; state.screen='privacy'; }
+    loadLocal(); render();
+  }
+});
 window.addEventListener('online',()=>{state.online=true;log('network_changed',{online:true});render();});
 window.addEventListener('offline',()=>{state.online=false;log('network_changed',{online:false});render();});
 
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
-log('session_started',{online:state.online,status:'prototype_v0.5'});
+log('session_started',{online:state.online,status:'prototype_v0.6'});
 render();
