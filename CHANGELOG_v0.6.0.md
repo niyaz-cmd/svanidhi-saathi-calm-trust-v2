@@ -5,5 +5,6 @@
 - Adds Settings with persistent language choices, a full local-data export, research withdrawal, correction guidance, and local deletion.
 - Identifies Formetry Labs and `niyaz@in60z.com` as the prototype privacy contact.
 - Removes the fictional named greeting and clearly labels the experience as an independent research prototype.
+- Keeps the fictional payment due date eleven calendar days ahead so it agrees with the displayed days remaining.
 - Cancels pending speech and transcription when voice permission is withdrawn or navigation ends the voice flow.
 - Preserves the v0.4 voice confirmation architecture, v0.5 ledger, Kannada amount hardening, and protected Sarvam routes.

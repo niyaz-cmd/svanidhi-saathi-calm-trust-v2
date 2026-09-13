@@ -73,6 +73,13 @@ const VOICE_V03_COPY = {
 const root = document.querySelector('#app');
 const toastNode = document.querySelector('#toast');
 
+function dateAfterToday(days) {
+  const value = new Date();
+  value.setHours(12, 0, 0, 0);
+  value.setDate(value.getDate() + days);
+  return value.toISOString().slice(0, 10);
+}
+
 const state = {
   privacy: defaultPrivacy(),
   privacyDraft: null,
@@ -107,7 +114,7 @@ const state = {
   question: null,
   answer: null,
   researchOpen: false,
-  payment: { totalDue:8400, readyAmount:7080, remainingDays:11, dueDate:'8 September', minimumDue:420, statementDate:'20 August' },
+  payment: { totalDue:8400, readyAmount:7080, remainingDays:11, dueDate:dateAfterToday(11), minimumDue:420, statementDate:'20 August' },
   session: { id:newSessionId(), startedAt:new Date().toISOString() },
   events: [],
   research: { tasks:Array(9).fill(false), helpNeeded:false, trustConcern:'', wouldUseAgain:'', quote:'', notes:'' }
@@ -118,6 +125,10 @@ const voiceAllowed = () => Boolean(readPrivacy(localStorage).acceptedAt && readP
 const t = (key) => VOICE_V03_COPY[state.language]?.[key] ?? COPY[state.language]?.[key] ?? VOICE_V03_COPY.en[key] ?? COPY.en[key] ?? key;
 const lt = (kn, hi, en) => state.language === 'kn' ? kn : state.language === 'hi' ? hi : en;
 const money = (value) => new Intl.NumberFormat('en-IN', { style:'currency', currency:'INR', maximumFractionDigits:0 }).format(value);
+const dueDate = () => new Intl.DateTimeFormat(
+  state.language === 'kn' ? 'kn-IN' : state.language === 'hi' ? 'hi-IN' : 'en-IN',
+  { day:'numeric', month:'long', timeZone:'Asia/Kolkata' }
+).format(new Date(`${state.payment.dueDate}T12:00:00+05:30`));
 const reserve = () => calculateReserve(state.payment);
 const minimumExplanation = () => explainMinimumDue({ totalDue:state.payment.totalDue, minimumDue:state.payment.minimumDue });
 
@@ -235,7 +246,7 @@ function homeScreen() {
     ${ledgerCard()}
     <section class="hero-card">
       <p class="support">${lt('ಉದಾಹರಣೆ ಪಾವತಿ ಯೋಜನೆ','उदाहरण भुगतान योजना','Example payment plan')}</p>
-      <p class="kicker">${t('payment')}</p><div class="money">${money(state.payment.totalDue)}</div><p>${state.payment.dueDate} · ${state.payment.remainingDays} ${t('days')}</p>
+      <p class="kicker">${t('payment')}</p><div class="money">${money(state.payment.totalDue)}</div><p>${dueDate()} · ${state.payment.remainingDays} ${t('days')}</p>
       <div class="payment-breakdown"><div><span>${t('readyNow')}</span><strong>${money(state.payment.readyAmount)}</strong></div><div><span>${t('stillNeeded')}</span><strong>${money(r.remaining)}</strong></div></div>
       <div class="due-meta"><button class="calculation-link" data-action="explain-payment">${icon('info',17,true)} ${t('calculation')}</button><div style="text-align:right"><span class="support">${t('suggested')}</span><div style="font-size:22px;font-weight:850;margin-top:3px">${money(r.dailyReserve)}</div></div></div>
     </section>
@@ -331,7 +342,7 @@ function billExplainedScreen() {
     ${header({back:true})}<h1>${t('billExplained')}</h1>
     <section class="card bill-grid">
       <div class="bill-item"><div class="bill-label">${t('used')}</div><div class="bill-value">${money(state.payment.totalDue)}</div></div>
-      <div class="bill-item"><div class="bill-label">${t('payBy')}</div><div class="bill-value">${state.payment.dueDate}</div></div>
+      <div class="bill-item"><div class="bill-label">${t('payBy')}</div><div class="bill-value">${dueDate()}</div></div>
       <div class="bill-item"><div class="bill-label">${t('clearBill')}</div><div class="bill-value">${money(state.payment.totalDue)}</div></div>
     </section>
     <section class="card warning"><h3>${t('minimum')}: ${money(state.payment.minimumDue)}</h3><p class="support" style="margin-top:7px">Paying only ${money(state.payment.minimumDue)} does not clear the full bill. ${money(min.remainingIfMinimumPaid)} would remain.</p></section>
@@ -378,7 +389,7 @@ function offlineScreen() {
 }
 
 function uncertainScreen() {
-  return `<main class="screen">${header({back:true})}<h1>${t('uncertain')}</h1><p class="lede">${t('uncertainSupport')}</p><section class="card"><p class="support">${t('dueReadable')}</p><div class="bill-value">${state.payment.dueDate}</div><div style="height:1px;background:var(--line);margin:16px 0"></div><p class="support">${t('amountUnclear')}</p></section><section class="card warning"><p class="bill-label">${t('possible')}</p><div class="bill-value">₹8,400 ?</div><span class="status-pill">${icon('info',15)} ${t('needsConfirm')}</span></section><label class="input-label">${t('manualAmount')}<input class="input" id="manual-bill-amount" type="number" inputmode="numeric" min="1" placeholder="8400"></label><button class="btn primary full" data-action="confirm-bill-manual">${t('confirmAmount')}</button><button class="btn secondary full" data-action="bill-screen">${t('retake')}</button></main>`;
+  return `<main class="screen">${header({back:true})}<h1>${t('uncertain')}</h1><p class="lede">${t('uncertainSupport')}</p><section class="card"><p class="support">${t('dueReadable')}</p><div class="bill-value">${dueDate()}</div><div style="height:1px;background:var(--line);margin:16px 0"></div><p class="support">${t('amountUnclear')}</p></section><section class="card warning"><p class="bill-label">${t('possible')}</p><div class="bill-value">₹8,400 ?</div><span class="status-pill">${icon('info',15)} ${t('needsConfirm')}</span></section><label class="input-label">${t('manualAmount')}<input class="input" id="manual-bill-amount" type="number" inputmode="numeric" min="1" placeholder="8400"></label><button class="btn primary full" data-action="confirm-bill-manual">${t('confirmAmount')}</button><button class="btn secondary full" data-action="bill-screen">${t('retake')}</button></main>`;
 }
 
 function researchDrawer() {
@@ -464,19 +475,19 @@ function answerFor(index) {
   const min = minimumExplanation();
   const answers = {
     kn: [
-      `${state.payment.dueDate} ರಂದು ಪಾವತಿಸಬೇಕು.`,
+      `${dueDate()} ರಂದು ಪಾವತಿಸಬೇಕು.`,
       `ಇಂದು ${money(r.dailyReserve)} ಬೇರ್ಪಡಿಸುವ ಸಲಹೆ ಇದೆ.`,
       `${money(state.payment.minimumDue)} ಕನಿಷ್ಠ ಪಾವತಿ. ಅದನ್ನು ಮಾತ್ರ ಪಾವತಿಸಿದರೆ ${money(min.remainingIfMinimumPaid)} ಬಾಕಿ ಉಳಿಯುತ್ತದೆ.`,
       paymentExplanationText()
     ],
     hi: [
-      `आपको ${state.payment.dueDate} तक भुगतान करना है।`,
+      `आपको ${dueDate()} तक भुगतान करना है।`,
       `आज ${money(r.dailyReserve)} अलग रखने का सुझाव है।`,
       `${money(state.payment.minimumDue)} न्यूनतम देय है। केवल इतना चुकाने पर ${money(min.remainingIfMinimumPaid)} बाकी रहेगा।`,
       paymentExplanationText()
     ],
     en: [
-      `Your payment is due on ${state.payment.dueDate}.`,
+      `Your payment is due on ${dueDate()}.`,
       `The deterministic suggestion for today is ${money(r.dailyReserve)}.`,
       `${money(state.payment.minimumDue)} is the minimum due. Paying only that would leave ${money(min.remainingIfMinimumPaid)} unpaid.`,
       paymentExplanationText()
@@ -840,7 +851,7 @@ root.addEventListener('click', async (event) => {
     case 'sample-bill': state.billRead='confirmed'; log('bill_sample_confirmed',{source:'fictional_test_statement'}); go('billExplained'); break;
     case 'uncertain-bill': state.billRead='uncertain'; log('bill_uncertain',{confidence:'low'}); go('uncertain'); break;
     case 'toggle-source': state.sourceOpen=!state.sourceOpen; log('provenance_toggled',{source:'fictional_test_statement'}); render(); break;
-    case 'listen-bill': { const text=`${money(state.payment.totalDue)}. ${t('payBy')} ${state.payment.dueDate}.`; await playSaathiSpeech(text, 'bill_played'); break; }
+    case 'listen-bill': { const text=`${money(state.payment.totalDue)}. ${t('payBy')} ${dueDate()}.`; await playSaathiSpeech(text, 'bill_played'); break; }
     case 'ask-bill': go('ask'); break;
     case 'listen-answer': await playSaathiSpeech(state.answer||'', 'answer_replayed'); break;
     case 'confirm-bill-manual': {

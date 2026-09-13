@@ -9,6 +9,8 @@ const icons = fs.readFileSync(new URL('../src/ui/icons.mjs', import.meta.url), '
 
 test('uses canonical demo payment data that reconciles to ₹120 per day', () => {
   assert.match(app, /totalDue:8400, readyAmount:7080, remainingDays:11/);
+  assert.match(app, /dueDate:dateAfterToday\(11\)/);
+  assert.doesNotMatch(app, /dueDate:'8 September'/);
 });
 
 test('loads Google Material Symbols Rounded and maps UI icons to material symbols', () => {

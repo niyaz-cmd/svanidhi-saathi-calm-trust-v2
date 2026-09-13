@@ -9,7 +9,7 @@ fa00f10b4a923b10f18a11bba1342bbcdbd5747290eb5cd5d7e3a96403c16d81  ./CHANGELOG_v0
 8f662a17aeeb84a7191ec4fd4cd71ecdf16a6b6f7a3f5c461ecda3ac0221875e  ./CHANGELOG_v0.5.2.md
 f72fe50451038c03a305f5ee2be2be924874c9b08e62b2f956617e874015cb1b  ./CHANGELOG_v0.5.3.md
 3fbf6e1c1e74276fd99f85272bc6a3bc3577c5b9daf285d40a73da3f2b3a97f1  ./CHANGELOG_v0.5.md
-ae726ddcd6bcbb54f12c08022b4a6ab5e9348b82aabd70b7e7fe72d5ccb5c05b  ./CHANGELOG_v0.6.0.md
+011a13aa820a5d9d77fec635752cb7fa5cf4eb1325252643aa9eb36031b93db7  ./CHANGELOG_v0.6.0.md
 c4f6aaeaa26a61c3d63b692bc59c419c9230692bf9b40cab75d4c55a5b5b2251  ./README.md
 da4a7adf9381826ddec5d8167b1b478d8de4cb6f4812dcf690da962684adf8c4  ./api/speech.mjs
 378b15bee41ccfdf14a00c2b5247b238ad359b7b0bce0aa5a356c799528cd967  ./api/transcribe.mjs
@@ -27,7 +27,7 @@ e44a61a6e7d3d0b17cc16b5d3ffdeb59236248a9578feac4b96c50709e2ed1ab  ./package.json
 b4e22794d638abe27fb103e358611746953c913daf43be611abe50e1822f3e77  ./scripts/build.mjs
 fb9e3167d446af6d29ade58266032a37cc47eb5d63f218fb219ddc5d47f1ab3d  ./scripts/dev-server.mjs
 1b5e9cfa6a6cf5620ee2bac0d04a9f87c5eca3cab54a6fb250936bcd1468cc0b  ./service-worker.js
-cec80200fa5ec2d3c48f1473117ab4e59aa7a086a3cd8553b3a7083b254b4d50  ./src/app.mjs
+5dad6481941bdaf800b2762812f57ed3f0443a62f3ad5bdaf18abd61991e2737  ./src/app.mjs
 41d3d31da0eb45260c9d930a603dea90f7a6f160f95d803288312af957bfb3fa  ./src/core/activity-store.mjs
 10f1d21de0191b42d39fa29fe923ddee44dd9cd78ae14dece451d38c9de9a070  ./src/core/audio-capture.mjs
 ef78ad6bd3541645fdde935fe709b2147811896db32447f61111014409d44089  ./src/core/device-capabilities.mjs
@@ -54,7 +54,7 @@ aeb194726febdd8869f413b69e890224f87efc81b789f64a55637b34001a2c0f  ./tests/privac
 57d8af8c97b3a8d9d51cc32b0f1f91be9d233975fe83a9641e45eb747fee0fe1  ./tests/speech-api.test.mjs
 fdcddb69a62f79d2f49bc061bd56c1ce504b91ecd70634030c3b45b27b8bc58c  ./tests/speech-parser.test.mjs
 51e29da33cbe0fa5ba878f7bddf7ecdeec05257620855d761c4d18830a1f3b4d  ./tests/transcription-api.test.mjs
-b1feaac940950ed9032921ae0fe94326e1e8f4e29663913c1384f97d89e260a1  ./tests/ui-contract.test.mjs
+13938629fa1188c8a3b35b981f61912ff05194c8e0f16b0b72e27a1cc5c99277  ./tests/ui-contract.test.mjs
 5556e2ddd6687d02c4bf20af667f72d9898b272e9ad9fc95e036df454f5ef37e  ./tests/voice-copy.test.mjs
 cd74ac83a8fa51525a5a29fbf9676059e39e61fc1fbdcea199100f89d724064a  ./tests/voice-flow.test.mjs
 38ce6ff8e9598da47438ef5c5fa526e138dd890540bc98546f569c507dfef443  ./vercel.json
