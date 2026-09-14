@@ -2,7 +2,7 @@
 
 ## Positioning
 
-SVANidhi Saathi v0.6.0 is an independent Formetry Labs research prototype. It is not a Government of India service, a bank account, a loan application, an accounting system, or a statement that any authority has approved the product.
+SVANidhi Saathi v0.6.1 is an independent Formetry Labs research prototype. It is not a Government of India service, a bank account, a loan application, an accounting system, or a statement that any authority has approved the product.
 
 Use fictional or sample information during demonstrations. Do not collect Aadhaar, OTP, PIN, CVV, bank passwords, account numbers, or unrelated personal details. The current prototype is for adults aged 18 or older.
 

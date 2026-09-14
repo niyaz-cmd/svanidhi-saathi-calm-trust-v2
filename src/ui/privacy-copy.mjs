@@ -12,7 +12,7 @@ export const PRIVACY_COPY = {
  remove:'Delete data & withdraw consent', deleteTitle:'Delete Saathi data from this browser?', deleteHint:'This removes money entries, corrections, research notes, language and consent. It cannot be undone. Download your data first if needed. Other apps are unaffected.', confirmDelete:'Yes, delete my data', cancel:'Keep my data', deleteError:'Some data could not be deleted. Voice and research are stopped. Try again or clear this site’s data in browser settings.',
  help:'Privacy & support', contact:'Formetry Labs is responsible for this prototype. For privacy questions, corrections, or requests about information shared with us, email the contact below. Local records can be corrected in Activity and deleted here.',
  infrastructure:'Opening this website sends connection information to Vercel. Icon fonts are fetched from Google. These services may keep operational logs.',
- receipt:'Notice version', account:'This device', voiceOff:'Voice is off. Type below, or enable online voice in Settings.', privacy:'Privacy choices', back:'Back', language:'Language', version:'Prototype v0.6.0', greeting:'Welcome to Saathi'
+    receipt:'Notice version', account:'This device', voiceOff:'Voice is off. Type below, or enable online voice in Settings.', privacy:'Privacy choices', back:'Back', language:'Language', version:'Prototype v0.6.1', greeting:'Welcome to Saathi'
  },
  hi: {
  title:'आपकी पसंद। आपका डेटा।', settings:'सेटिंग्स और आपका डेटा', intro:'Formetry Labs · शोध प्रोटोटाइप',
@@ -27,7 +27,7 @@ export const PRIVACY_COPY = {
  remove:'डेटा मिटाएँ और सहमति वापस लें', deleteTitle:'इस ब्राउज़र से साथी का डेटा मिटाएँ?', deleteHint:'रकम, सुधार, शोध नोट्स, भाषा और सहमति मिट जाएँगे। इसे वापस नहीं किया जा सकता। ज़रूरत हो तो पहले डेटा डाउनलोड करें। दूसरे ऐप प्रभावित नहीं होंगे।', confirmDelete:'हाँ, मेरा डेटा मिटाएँ', cancel:'मेरा डेटा रखें', deleteError:'कुछ डेटा नहीं मिट सका। आवाज़ और शोध बंद हैं। फिर कोशिश करें या ब्राउज़र सेटिंग्स से इस साइट का डेटा साफ़ करें।',
  help:'गोपनीयता और सहायता', contact:'इस प्रोटोटाइप की ज़िम्मेदारी Formetry Labs की है। गोपनीयता, सुधार या हमारे साथ साझा की गई जानकारी के अनुरोध के लिए नीचे ईमेल करें। स्थानीय रिकॉर्ड गतिविधि में सुधारें और यहाँ मिटाएँ।',
  infrastructure:'यह वेबसाइट खोलने पर कनेक्शन की जानकारी Vercel को जाती है। आइकन फ़ॉन्ट Google से आते हैं। ये सेवाएँ संचालन लॉग रख सकती हैं।',
- receipt:'नोटिस संस्करण', account:'यह डिवाइस', voiceOff:'आवाज़ बंद है। नीचे लिखें या सेटिंग्स में ऑनलाइन आवाज़ चालू करें।', privacy:'गोपनीयता विकल्प', back:'वापस', language:'भाषा', version:'प्रोटोटाइप v0.6.0', greeting:'साथी में आपका स्वागत है'
+    receipt:'नोटिस संस्करण', account:'यह डिवाइस', voiceOff:'आवाज़ बंद है। नीचे लिखें या सेटिंग्स में ऑनलाइन आवाज़ चालू करें।', privacy:'गोपनीयता विकल्प', back:'वापस', language:'भाषा', version:'प्रोटोटाइप v0.6.1', greeting:'साथी में आपका स्वागत है'
  },
  kn: {
  title:'ನಿಮ್ಮ ಆಯ್ಕೆ. ನಿಮ್ಮ ಮಾಹಿತಿ.', settings:'ಸೆಟ್ಟಿಂಗ್‌ಗಳು ಮತ್ತು ನಿಮ್ಮ ಮಾಹಿತಿ', intro:'Formetry Labs · ಸಂಶೋಧನಾ ಮಾದರಿ',
@@ -42,6 +42,6 @@ export const PRIVACY_COPY = {
  remove:'ಮಾಹಿತಿ ಅಳಿಸಿ ಮತ್ತು ಒಪ್ಪಿಗೆ ಹಿಂಪಡೆಯಿರಿ', deleteTitle:'ಈ ಬ್ರೌಸರ್‌ನಿಂದ ಸಾಥಿ ಮಾಹಿತಿ ಅಳಿಸಬೇಕೇ?', deleteHint:'ಹಣದ ದಾಖಲೆಗಳು, ತಿದ್ದುಪಡಿಗಳು, ಸಂಶೋಧನಾ ಟಿಪ್ಪಣಿಗಳು, ಭಾಷೆ ಮತ್ತು ಒಪ್ಪಿಗೆ ಅಳಿಯುತ್ತವೆ. ಇದನ್ನು ಹಿಂದಿರುಗಿಸಲಾಗುವುದಿಲ್ಲ. ಬೇಕಾದರೆ ಮೊದಲು ಡೌನ್‌ಲೋಡ್ ಮಾಡಿ. ಇತರ ಆ್ಯಪ್‌ಗಳಿಗೆ ಪರಿಣಾಮವಿಲ್ಲ.', confirmDelete:'ಹೌದು, ನನ್ನ ಮಾಹಿತಿ ಅಳಿಸಿ', cancel:'ನನ್ನ ಮಾಹಿತಿ ಉಳಿಸಿ', deleteError:'ಕೆಲವು ಮಾಹಿತಿ ಅಳಿಸಲಾಗಲಿಲ್ಲ. ಧ್ವನಿ ಮತ್ತು ಸಂಶೋಧನೆ ನಿಲ್ಲಿಸಲಾಗಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ ಅಥವಾ ಬ್ರೌಸರ್ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಈ ತಾಣದ ಮಾಹಿತಿ ಅಳಿಸಿ.',
  help:'ಗೌಪ್ಯತೆ ಮತ್ತು ಸಹಾಯ', contact:'ಈ ಮಾದರಿಯ ಜವಾಬ್ದಾರಿ Formetry Labsಗೆ ಸೇರಿದೆ. ಗೌಪ್ಯತೆ, ತಿದ್ದುಪಡಿ ಅಥವಾ ನಮ್ಮೊಂದಿಗೆ ಹಂಚಿಕೊಂಡ ಮಾಹಿತಿಯ ವಿನಂತಿಗಳಿಗಾಗಿ ಕೆಳಗಿನ ಇಮೇಲ್ ಬಳಸಿ. ಸ್ಥಳೀಯ ದಾಖಲೆಗಳನ್ನು ಚಟುವಟಿಕೆಯಲ್ಲಿ ತಿದ್ದಿ ಅಥವಾ ಇಲ್ಲಿ ಅಳಿಸಿ.',
  infrastructure:'ಈ ತಾಣ ತೆರೆದಾಗ ಸಂಪರ್ಕ ಮಾಹಿತಿ Vercelಗೆ ಹೋಗುತ್ತದೆ. ಐಕಾನ್ ಫಾಂಟ್‌ಗಳು Googleನಿಂದ ಬರುತ್ತವೆ. ಈ ಸೇವೆಗಳು ಕಾರ್ಯಾಚರಣೆಯ ದಾಖಲೆಗಳನ್ನು ಉಳಿಸಬಹುದು.',
- receipt:'ಸೂಚನೆ ಆವೃತ್ತಿ', account:'ಈ ಸಾಧನ', voiceOff:'ಧ್ವನಿ ನಿಲ್ಲಿಸಲಾಗಿದೆ. ಕೆಳಗೆ ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಆನ್‌ಲೈನ್ ಧ್ವನಿ ಸಕ್ರಿಯಗೊಳಿಸಿ.', privacy:'ಗೌಪ್ಯತೆಯ ಆಯ್ಕೆಗಳು', back:'ಹಿಂದೆ', language:'ಭಾಷೆ', version:'ಮಾದರಿ v0.6.0', greeting:'ಸಾಥಿಗೆ ಸ್ವಾಗತ'
+    receipt:'ಸೂಚನೆ ಆವೃತ್ತಿ', account:'ಈ ಸಾಧನ', voiceOff:'ಧ್ವನಿ ನಿಲ್ಲಿಸಲಾಗಿದೆ. ಕೆಳಗೆ ಟೈಪ್ ಮಾಡಿ ಅಥವಾ ಸೆಟ್ಟಿಂಗ್‌ಗಳಲ್ಲಿ ಆನ್‌ಲೈನ್ ಧ್ವನಿ ಸಕ್ರಿಯಗೊಳಿಸಿ.', privacy:'ಗೌಪ್ಯತೆಯ ಆಯ್ಕೆಗಳು', back:'ಹಿಂದೆ', language:'ಭಾಷೆ', version:'ಮಾದರಿ v0.6.1', greeting:'ಸಾಥಿಗೆ ಸ್ವಾಗತ'
  }
 };

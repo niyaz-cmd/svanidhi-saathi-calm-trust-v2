@@ -1,5 +1,6 @@
 import { calculateReserve, explainMinimumDue } from './core/finance-engine.mjs';
 import { parseCurrencyAmount } from './core/speech-parser.mjs';
+import { requestedLanguageSwitch, languageName } from './core/language-switch.mjs';
 import { newSessionId, createResearchEvent, serializeSession } from './core/research-events.mjs';
 import { preloadSpeech, speak, stopSpeech } from './core/device-capabilities.mjs';
 import { audioCaptureSupported, VoiceAudioCapture, transcribeRecordedAudio } from './core/audio-capture.mjs';
@@ -113,6 +114,7 @@ const state = {
   operatorTapCount: 0,
   question: null,
   answer: null,
+  languageChangeTarget: null,
   researchOpen: false,
   payment: { totalDue:8400, readyAmount:7080, remainingDays:11, dueDate:dateAfterToday(11), minimumDue:420, statementDate:'20 August' },
   session: { id:newSessionId(), startedAt:new Date().toISOString() },
@@ -262,6 +264,8 @@ function voiceScreen() {
   const question = isCollection ? copy.collectionQuestion : copy.investmentQuestion;
   const listeningLabel = isCollection ? copy.collectionListening : copy.investmentListening;
   const confirming = state.voicePhase === 'confirm_amount' && Number.isFinite(state.pendingAmount);
+  const confirmingLanguage = state.voicePhase === 'confirm_language' && state.languageChangeTarget;
+  const targetName = confirmingLanguage ? languageName(state.languageChangeTarget) : '';
   const transcribing = state.voicePhase === 'transcribing';
   const waiting = state.speaking || state.voicePhase === 'prompting' || state.voicePhase === 'requesting_mic' || transcribing;
   const title = confirming ? copy.confirmTitle : transcribing ? lt('ನಿಮ್ಮ ಮೊತ್ತವನ್ನು ಅರ್ಥಮಾಡಿಕೊಳ್ಳುತ್ತಿದ್ದೇನೆ…','आपकी रकम समझ रहा हूँ…','Understanding your amount…') : state.listening ? t('listening') : t('voiceTitle');
@@ -272,7 +276,7 @@ function voiceScreen() {
     <h1>${title}</h1><p class="lede">${support}</p>
     ${!voiceAllowed() ? `<section class="card soft"><p>${pc('voiceOff')}</p><button class="btn secondary full" data-action="open-settings">${pc('settings')}</button></section>` : ''}
     <section class="voice-question-card">${icon('help',24,true)}<p>${question}</p></section>
-    ${confirming ? `<section class="transcript-card" aria-live="polite"><span class="amount-kicker">${isCollection ? copy.collectionLabel : copy.investmentLabel}</span><div class="heard-amount">${money(state.pendingAmount)}</div><blockquote>${escapeHtml(state.transcript)}</blockquote></section><button class="btn primary full push" data-action="confirm-amount" ${state.speaking?'disabled':''}>${icon('check',20,true)} ${copy.yesCorrect}</button><button class="btn secondary full" data-action="reject-amount" ${state.speaking?'disabled':''}>${copy.noRepeat}</button>` : `<div class="mic-stage">
+    ${confirmingLanguage ? `<section class="transcript-card language-switch-card" aria-live="polite"><span class="amount-kicker">${lt('ಭಾಷೆ ಬದಲಾವಣೆ','भाषा बदलें','Language change')}</span><h2>${lt(`${targetName}ಗೆ ಬದಲಾಯಿಸಬೇಕೇ?`,`क्या ${targetName} में बदलें?`,`Switch to ${targetName}?`)}</h2><blockquote>${escapeHtml(state.transcript)}</blockquote><p class="support">${lt('ದೃಢೀಕರಿಸಿದ ನಂತರ ಸಾಥಿಯ ಎಲ್ಲಾ ಮಾತು ಮತ್ತು ಪರದೆ ಈ ಭಾಷೆಯಲ್ಲಿ ಇರುತ್ತದೆ.','पुष्टि के बाद साथी की आवाज़ और स्क्रीन इसी भाषा में होगी।','After confirmation, Saathi’s voice and screen will use this language.')}</p></section><button class="btn primary full push" data-action="confirm-language-change" ${state.speaking?'disabled':''}>${icon('check',20,true)} ${lt('ಹೌದು, ಬದಲಾಯಿಸಿ','हाँ, बदलें','Yes, switch')}</button><button class="btn secondary full" data-action="reject-language-change" ${state.speaking?'disabled':''}>${lt('ಈ ಭಾಷೆಯಲ್ಲೇ ಇರಿ','इसी भाषा में रहें','Keep this language')}</button>` : confirming ? `<section class="transcript-card" aria-live="polite"><span class="amount-kicker">${isCollection ? copy.collectionLabel : copy.investmentLabel}</span><div class="heard-amount">${money(state.pendingAmount)}</div><blockquote>${escapeHtml(state.transcript)}</blockquote></section><button class="btn primary full push" data-action="confirm-amount" ${state.speaking?'disabled':''}>${icon('check',20,true)} ${copy.yesCorrect}</button><button class="btn secondary full" data-action="reject-amount" ${state.speaking?'disabled':''}>${copy.noRepeat}</button>` : `<div class="mic-stage">
       <div class="wave ${state.listening||state.speaking?'active':''}" aria-hidden="true">${'<span></span>'.repeat(7)}</div>
       <button class="mic-button ${state.listening?'listening':''}" data-action="start-voice" aria-label="${t('startListening')}" ${(!voiceAllowed()||state.listening||waiting)?'disabled aria-pressed="true"':''}>${icon(state.speaking?'volume':'mic',44)}</button>
       <strong>${state.speaking ? t('voiceSpeaking') : state.listening ? t('listening') : copy.tapToRetry}</strong>
@@ -624,7 +628,7 @@ async function finishListeningTurn(turn, { reason = 'manual', transcript = '', a
     log('transcription_started', { turn, provider:'sarvam-saaras-v4' });
     if (!voiceAllowed()) return;
     transcriptionController = new AbortController();
-    const transcription = await transcribeRecordedAudio(audio, state.language, {signal:transcriptionController.signal});
+    const transcription = await transcribeRecordedAudio(audio, 'auto', {signal:transcriptionController.signal});
     log('transcription_finished', {
       turn,
       provider:transcription.provider,
@@ -638,6 +642,17 @@ async function finishListeningTurn(turn, { reason = 'manual', transcript = '', a
   if (!value) {
     notify(t('noSpeech'));
     await promptAndListen(turn, voiceCopy().repeatAmount, run, 'repeat');
+    return;
+  }
+  const languageTarget = requestedLanguageSwitch(value, state.language);
+  if (languageTarget) {
+    state.transcript = value;
+    state.languageChangeTarget = languageTarget;
+    state.voicePhase = 'confirm_language';
+    log('language_switch_requested', { turn, target:languageTarget });
+    render();
+    const prompt = `Switch to ${languageName(languageTarget)}?`;
+    await playPrompt(prompt, { turn, kind:'language_switch_confirmation' });
     return;
   }
   const parsed = parseCurrencyAmount(value, { language:state.language });
@@ -679,6 +694,8 @@ root.addEventListener('click', async (event) => {
 
   if (button.dataset.language) {
     state.language = button.dataset.language;
+    state.answer = null;
+    state.question = null;
     log('language_selected', { note:state.language });
     render(); return;
   }
@@ -818,6 +835,31 @@ root.addEventListener('click', async (event) => {
       state.pendingAmount = null;
       log('amount_rejected', { turn });
       await promptAndListen(turn, voiceCopy().repeatAmount, state.conversationRun, 'repeat');
+      break;
+    }
+    case 'confirm-language-change': {
+      const target = state.languageChangeTarget;
+      if (!target || state.speaking) return;
+      try {
+        state.language = target;
+        state.answer = null;
+        state.question = null;
+        state.privacy = savePrivacy(localStorage, { language:target, voice:state.privacy.voice, research:state.privacy.research });
+        state.languageChangeTarget = null;
+        state.voicePhase = 'idle';
+        log('language_switch_confirmed', { target });
+        render();
+        await promptAndListen(state.activeTurn, promptFor(state.activeTurn));
+      } catch {
+        notify(pc('error'));
+      }
+      break;
+    }
+    case 'reject-language-change': {
+      state.languageChangeTarget = null;
+      state.voicePhase = 'idle';
+      log('language_switch_rejected', { language:state.language });
+      await promptAndListen(state.activeTurn, voiceCopy().repeatAmount);
       break;
     }
     case 'review-transcript-again': go('voice'); await startVoiceConversation(); break;

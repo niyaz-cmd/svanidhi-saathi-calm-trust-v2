@@ -1,6 +1,6 @@
 {
   "name": "svanidhi-saathi-field-prototype",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "private": true,
   "type": "module",
   "description": "Field-grade PWA prototype for SVANidhi Saathi vendor research.",
@@ -8,7 +8,7 @@
     "test": "node --test tests/*.test.mjs",
     "build": "node scripts/build.mjs",
     "dev": "node scripts/dev-server.mjs",
-    "check": "node --check src/app.mjs && node --check src/core/finance-engine.mjs && node --check src/core/speech-parser.mjs && node --check src/core/research-events.mjs && node --check src/core/privacy-store.mjs && node --check src/core/device-capabilities.mjs && node --check src/core/audio-capture.mjs && node --check src/core/voice-flow.mjs && node --check src/core/voice-copy.mjs && node --check src/core/activity-store.mjs && node --check src/ui/privacy-copy.mjs && node --check api/speech.mjs && node --check api/transcribe.mjs && node --check scripts/build.mjs && node --check service-worker.js && node --check src/core/ledger-store.mjs && node --check src/core/money-speech.mjs"
+    "check": "node --check src/app.mjs && node --check src/core/finance-engine.mjs && node --check src/core/language-switch.mjs && node --check src/core/speech-parser.mjs && node --check src/core/research-events.mjs && node --check src/core/privacy-store.mjs && node --check src/core/device-capabilities.mjs && node --check src/core/audio-capture.mjs && node --check src/core/voice-flow.mjs && node --check src/core/voice-copy.mjs && node --check src/core/activity-store.mjs && node --check src/ui/privacy-copy.mjs && node --check api/speech.mjs && node --check api/transcribe.mjs && node --check scripts/build.mjs && node --check service-worker.js && node --check src/core/ledger-store.mjs && node --check src/core/money-speech.mjs"
   },
   "engines": {
     "node": "24.x"

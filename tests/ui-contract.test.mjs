@@ -49,6 +49,15 @@ test('scrolls the capped desktop phone frame and keeps navigation visible', () =
   assert.doesNotMatch(css, /\.phone\{[^}]*overflow:hidden/);
 });
 
+test('offers a confirmed voice language switch and clears stale Ask Saathi answers', () => {
+  assert.match(app, /requestedLanguageSwitch\(value, state\.language\)/);
+  assert.match(app, /data-action="confirm-language-change"/);
+  assert.match(app, /data-action="reject-language-change"/);
+  assert.match(app, /transcribeRecordedAudio\(audio, 'auto'/);
+  assert.match(app, /state\.answer = null;/);
+  assert.match(app, /savePrivacy\(localStorage, \{ language:target/);
+});
+
 test('uses Sarvam human voice for introductions and Ask Saathi answers', () => {
   const device = fs.readFileSync(new URL('../src/core/device-capabilities.mjs', import.meta.url), 'utf8');
   const speechApi = fs.readFileSync(new URL('../api/speech.mjs', import.meta.url), 'utf8');

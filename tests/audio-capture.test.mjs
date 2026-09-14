@@ -116,3 +116,15 @@ test('recorded audio is sent to the protected Sarvam transcription endpoint', as
     provider:'sarvam-saaras-v4'
   });
 });
+
+test('can request provider language detection for a spoken language-change command', async () => {
+  let request;
+  const audio = new Blob(['voice-audio'], { type:'audio/webm;codecs=opus' });
+  await transcribeRecordedAudio(audio, 'auto', {
+    fetchImpl:async (url) => {
+      request = url;
+      return { ok:true, json:async () => ({ transcript:'हिंदी में बात करो', languageCode:'hi-IN', provider:'sarvam-saaras-v4' }) };
+    }
+  });
+  assert.equal(request, '/api/transcribe?language=auto');
+});

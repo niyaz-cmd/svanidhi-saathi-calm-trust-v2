@@ -10,6 +10,9 @@ test('validates short browser audio and maps supported locales for Sarvam STT', 
   assert.deepEqual(normalizeTranscriptionRequest({ language:'en', contentType:'audio/webm', contentLength:undefined }), {
     languageCode:'en-IN', contentType:'audio/webm', upstreamContentType:'audio/webm', extension:'webm'
   });
+  assert.deepEqual(normalizeTranscriptionRequest({ language:'auto', contentType:'audio/webm', contentLength:12000 }), {
+    languageCode:'unknown', contentType:'audio/webm', upstreamContentType:'audio/webm', extension:'webm'
+  });
   assert.equal(normalizeTranscriptionRequest({ language:'xx', contentType:'audio/webm', contentLength:12000 }), null);
   assert.equal(normalizeTranscriptionRequest({ language:'en', contentType:'text/plain', contentLength:12000 }), null);
   assert.equal(normalizeTranscriptionRequest({ language:'en', contentType:'audio/webm', contentLength:9_000_000 }), null);

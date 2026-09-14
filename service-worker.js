@@ -1,7 +1,7 @@
-const CACHE = 'saathi-field-v0.6.0';
+const CACHE = 'saathi-field-v0.6.1';
 const APP_SHELL = [
   '/', '/index.html', '/styles.css', '/manifest.webmanifest', '/public/icons/icon.svg',
-  '/src/app.mjs', '/src/core/privacy-store.mjs', '/src/ui/privacy-copy.mjs', '/src/ui/icons.mjs', '/src/core/finance-engine.mjs', '/src/core/speech-parser.mjs',
+  '/src/app.mjs', '/src/core/privacy-store.mjs', '/src/ui/privacy-copy.mjs', '/src/ui/icons.mjs', '/src/core/finance-engine.mjs', '/src/core/language-switch.mjs', '/src/core/speech-parser.mjs',
   '/src/core/research-events.mjs', '/src/core/device-capabilities.mjs', '/src/core/voice-flow.mjs',
   '/src/core/voice-copy.mjs', '/src/core/activity-store.mjs', '/src/core/ledger-store.mjs', '/src/core/audio-capture.mjs', '/src/core/money-speech.mjs'
 ];

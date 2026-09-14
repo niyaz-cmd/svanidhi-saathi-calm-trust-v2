@@ -1,4 +1,4 @@
-const LANGUAGE_CODES = Object.freeze({ kn:'kn-IN', hi:'hi-IN', en:'en-IN' });
+const LANGUAGE_CODES = Object.freeze({ auto:'unknown', kn:'kn-IN', hi:'hi-IN', en:'en-IN' });
 const MAX_AUDIO_BYTES = 8_000_000;
 const REQUESTS_PER_MINUTE = 12;
 const requestWindows = new Map();
