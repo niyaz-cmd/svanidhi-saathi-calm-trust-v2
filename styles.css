@@ -29,7 +29,7 @@ button,input,textarea,select{font:inherit}
 button{cursor:pointer}
 button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid rgba(217,119,6,.32);outline-offset:2px}
 .app-shell{min-height:100dvh;display:flex;justify-content:center;align-items:flex-start;background:radial-gradient(circle at 50% -10%,#fffaf0 0,var(--cream) 45%)}
-.phone{width:min(100%,430px);min-height:100dvh;background:var(--cream);position:relative;overflow:hidden;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);box-shadow:0 0 0 1px rgba(18,63,50,.04)}
+.phone{width:min(100%,430px);min-height:100dvh;background:var(--cream);position:relative;overflow-x:hidden;overflow-y:auto;overscroll-behavior-y:contain;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);box-shadow:0 0 0 1px rgba(18,63,50,.04)}
 .screen{min-height:100dvh;padding:20px 22px 104px;display:flex;flex-direction:column;gap:18px}
 .topline{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:44px}
 .brand-mini{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--green-800);font-weight:800}
@@ -122,7 +122,7 @@ textarea.input{min-height:86px;resize:vertical}
 .activity-row:last-child{border-bottom:0}
 .activity-row span{color:var(--muted);font-size:13px}
 .activity-row strong{font-variant-numeric:tabular-nums}
-.bottom-nav{position:absolute;bottom:0;left:0;right:0;min-height:78px;padding:8px 18px calc(8px + env(safe-area-inset-bottom));background:rgba(247,241,230,.94);backdrop-filter:blur(16px);border-top:1px solid rgba(18,63,50,.1);display:grid;grid-template-columns:repeat(3,1fr);z-index:8}
+.bottom-nav{position:sticky;bottom:0;left:0;right:0;min-height:78px;margin-top:auto;padding:8px 18px calc(8px + env(safe-area-inset-bottom));background:rgba(247,241,230,.94);backdrop-filter:blur(16px);border-top:1px solid rgba(18,63,50,.1);display:grid;grid-template-columns:repeat(3,1fr);z-index:8}
 .nav-btn{border:0;background:transparent;color:var(--muted);display:grid;justify-items:center;align-content:center;gap:3px;min-height:56px;font-size:11px;font-weight:750}
 .nav-btn.active{color:var(--green-900)}
 .back-btn{border:0;background:transparent;color:var(--green-900);min-width:48px;min-height:48px;display:grid;place-items:center;margin-left:-12px}
@@ -138,7 +138,7 @@ textarea.input{min-height:86px;resize:vertical}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 .prototype-note{font-size:12px;color:#6b4a14;background:var(--saffron-soft);border:1px solid #f0d19f;padding:12px 14px;border-radius:15px;line-height:1.45}
 .spacer{height:2px}
-@media (min-width:700px){.app-shell{padding:24px}.phone{min-height:844px;height:844px;border-radius:36px;box-shadow:0 30px 80px rgba(18,63,50,.16);overflow:hidden}.screen{min-height:844px}.research-fab{bottom:90px}}
+@media (min-width:700px){.app-shell{padding:24px}.phone{min-height:844px;height:844px;border-radius:36px;box-shadow:0 30px 80px rgba(18,63,50,.16)}.screen{min-height:844px}.research-fab{bottom:90px}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation:none!important;transition:none!important}}
 
 /* v0.2 product polish */
@@ -163,6 +163,10 @@ textarea.input{min-height:86px;resize:vertical}
 .voice-card-copy{min-width:0;display:grid;gap:6px}
 .voice-card-copy strong{font-size:20px;line-height:1.28;color:var(--green-950)}
 .voice-card-copy span{font-size:14px;line-height:1.45;color:var(--muted)}
+.home-prompt{display:grid;gap:5px;padding:4px 2px 0}
+.primary-action{position:relative}
+.primary-action>.material-symbols-rounded{color:var(--green-900);justify-self:end}
+.account-entry{display:grid;gap:10px;padding:18px 2px 4px}
 .quick-action{min-height:112px;padding:20px;align-items:flex-start;box-shadow:none}
 .quick-action .action-icon{width:48px;height:48px;border-radius:16px;margin-bottom:12px}
 .bottom-nav{left:14px;right:14px;bottom:12px;border:1px solid rgba(18,63,50,.1);border-radius:28px;min-height:72px;padding:8px;background:rgba(255,253,248,.94);box-shadow:0 8px 26px rgba(18,63,50,.08)}

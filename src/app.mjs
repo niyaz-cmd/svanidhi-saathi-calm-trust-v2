@@ -163,10 +163,8 @@ function notify(message) {
 }
 
 function header({ back = false } = {}) {
-  const languageLabel = state.language === 'kn' ? 'ಕನ್ನಡ' : state.language === 'hi' ? 'हिन्दी' : 'English';
   return `<div class="topline">
     <div class="brand-cluster">${back ? `<button class="back-btn" data-action="back" aria-label="Back">${icon('back')}</button>` : ''}<button class="brand-mark" data-action="operator-tap" aria-label="SVANidhi Saathi">${icon('help',19,true)}</button><span class="brand-mini">${t('app')}</span></div>
-    ${state.screen === 'home' ? `<button class="language-pill" data-action="change-language">${icon('language',18)} ${languageLabel}</button>` : ''}
   </div>`;
 }
 
@@ -241,22 +239,18 @@ function homeScreen() {
   return `<main class="screen">
     ${header()}
     <div><h2>${pc('greeting')}</h2><p class="support" style="margin-top:4px">${t('morning')}</p></div>
-    <button class="btn secondary full" data-action="open-settings">${pc('settings')}</button>
-    <p class="support">${pc('intro')}</p>
-    ${ledgerCard()}
     <section class="hero-card">
       <p class="support">${lt('ಉದಾಹರಣೆ ಪಾವತಿ ಯೋಜನೆ','उदाहरण भुगतान योजना','Example payment plan')}</p>
       <p class="kicker">${t('payment')}</p><div class="money">${money(state.payment.totalDue)}</div><p>${dueDate()} · ${state.payment.remainingDays} ${t('days')}</p>
       <div class="payment-breakdown"><div><span>${t('readyNow')}</span><strong>${money(state.payment.readyAmount)}</strong></div><div><span>${t('stillNeeded')}</span><strong>${money(r.remaining)}</strong></div></div>
       <div class="due-meta"><button class="calculation-link" data-action="explain-payment">${icon('info',17,true)} ${t('calculation')}</button><div style="text-align:right"><span class="support">${t('suggested')}</span><div style="font-size:22px;font-weight:850;margin-top:3px">${money(r.dailyReserve)}</div></div></div>
     </section>
-    <button class="voice-card" data-action="voice-screen"><span class="voice-orb">${icon('mic',34,true)}</span><span class="voice-card-copy"><strong>${t('tellToday')}</strong><span>${t('tellSupport')}</span></span></button>
-    <button class="btn secondary full" data-action="replay-onboarding">${lt('ಸಾಥಿ ಹೇಗೆ ಕೆಲಸ ಮಾಡುತ್ತದೆ?','साथी कैसे काम करता है?','How does Saathi work?')}</button>
+    <section class="home-prompt"><h3>${lt('ನಿಮಗೆ ಯಾವ ಸಹಾಯ ಬೇಕು?','आपको किस मदद की ज़रूरत है?','What do you need help with?')}</h3><p class="support">${lt('ಪಾವತಿ, ಬಿಲ್ ಅಥವಾ ಇಂದಿನ ಹಣದ ಬಗ್ಗೆ ಸಾಥಿಯನ್ನು ಕೇಳಿ.','भुगतान, बिल या आज के पैसे के बारे में साथी से पूछें।','Ask Saathi about your payment, bill, or today’s money.')}</p></section>
+    <button class="voice-card primary-action" data-action="voice-screen"><span class="voice-orb">${icon('mic',34,true)}</span><span class="voice-card-copy"><strong>${t('tellToday')}</strong><span>${t('tellSupport')}</span></span>${icon('arrow',22,true)}</button>
     <div class="grid-2">
       <button class="action-card quick-action" data-action="bill-screen"><span><span class="action-icon">${icon('receipt',24)}</span><strong>${t('explainBill')}</strong></span></button>
       <button class="action-card quick-action" data-nav="ask"><span><span class="action-icon">${icon('help',24)}</span><strong>${t('ask')}</strong></span></button>
     </div>
-    <div class="prototype-note vendor-hidden">All payment and bill data is fictional research data.</div>
     ${nav('home')}
   </main>`;
 }
@@ -381,7 +375,8 @@ function activityScreen() {
   return `<main class="screen">${header()}<h1>${t('activity')}</h1>${ledgerCard()}
     <section class="card">${state.ledger.events.length ? [...state.ledger.events].reverse().slice(0,40).map(e=>`<div class="activity-row"><div><strong>${label(e)}</strong><span style="display:block">${escapeHtml(e.day)}</span></div><div><strong>${money(e.type==='adjustment'?e.amount:effectiveAmount(state.ledger,e.id))}</strong>${e.type!=='adjustment'?`<button class="btn secondary" data-action="edit-entry" data-id="${escapeHtml(e.id)}">${t('change')}</button>`:''}</div></div>`).join('') : `<p>${t('noActivity')}</p>`}</section>
     ${state.correctionId?`<section class="card" id="correction-form"><label>${lt('ಸರಿಯಾದ ಮೊತ್ತ','सही रकम','Correct amount')}<input class="input" id="correction-value" type="number" min="0" step="1" value="${state.correctionAmount}"></label><p>${lt('ದೃಢೀಕರಿಸಿದ ನಂತರ ತಿದ್ದುಪಡಿ ದಾಖಲಿಸಲಾಗುತ್ತದೆ. ಮೂಲ ದಾಖಲೆ ಉಳಿಯುತ್ತದೆ.','पुष्टि के बाद सुधार दर्ज होगा। मूल रिकॉर्ड रहेगा।','Confirm to append a correction. The original record remains.')}</p><button class="btn primary full" data-action="save-correction">${t('yesSave')}</button><button class="btn secondary full" data-action="cancel-correction">${lt('ರದ್ದು','रद्द','Cancel')}</button></section>`:''}
-    <p class="support">${lt('ಈ ಸಾಧನದಲ್ಲಿ ಮಾತ್ರ ಉಳಿಸಲಾಗಿದೆ. ಇತ್ತೀಚಿನ 40 ದಾಖಲೆಗಳನ್ನು ತೋರಿಸಲಾಗಿದೆ.','केवल इस डिवाइस पर सेव है। नवीनतम 40 रिकॉर्ड दिखते हैं।','Saved on this device only. Showing the latest 40 events; totals include all entries.')}</p>${nav('activity')}</main>`;
+    <p class="support">${lt('ಈ ಸಾಧನದಲ್ಲಿ ಮಾತ್ರ ಉಳಿಸಲಾಗಿದೆ. ಇತ್ತೀಚಿನ 40 ದಾಖಲೆಗಳನ್ನು ತೋರಿಸಲಾಗಿದೆ.','केवल इस डिवाइस पर सेव है। नवीनतम 40 रिकॉर्ड दिखते हैं।','Saved on this device only. Showing the latest 40 events; totals include all entries.')}</p>
+    <section class="account-entry"><h3>${pc('settings')}</h3><p class="support">${lt('ಭಾಷೆ, ಧ್ವನಿ ಮತ್ತು ನಿಮ್ಮ ಸ್ಥಳೀಯ ಮಾಹಿತಿಯನ್ನು ನಿರ್ವಹಿಸಿ.','भाषा, आवाज़ और अपना स्थानीय डेटा संभालें।','Manage language, voice, and your local data.')}</p><button class="btn secondary full" data-action="open-settings">${pc('settings')}</button></section>${nav('activity')}</main>`;
 }
 
 function offlineScreen() {

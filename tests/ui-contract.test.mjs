@@ -31,6 +31,24 @@ test('research controls are not exposed as a visible floating vendor control', (
   assert.match(app, /operator-tap/);
 });
 
+test('keeps the home screen focused on help and payment, with ledger and data controls in activity', () => {
+  const home = app.match(/function homeScreen\(\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
+  const activity = app.match(/function activityScreen\(\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
+  assert.match(home, /Example payment plan/);
+  assert.match(home, /What do you need help with/);
+  assert.doesNotMatch(home, /ledgerCard\(\)/);
+  assert.doesNotMatch(home, /data-action="open-settings"/);
+  assert.match(activity, /ledgerCard\(\)/);
+  assert.match(activity, /data-action="open-settings"/);
+});
+
+test('scrolls the capped desktop phone frame and keeps navigation visible', () => {
+  assert.match(css, /\.phone\{[^}]*overflow-y:auto/);
+  assert.match(css, /\.phone\{[^}]*overscroll-behavior-y:contain/);
+  assert.match(css, /\.bottom-nav\{[^}]*position:sticky/);
+  assert.doesNotMatch(css, /\.phone\{[^}]*overflow:hidden/);
+});
+
 test('uses Sarvam human voice for introductions and Ask Saathi answers', () => {
   const device = fs.readFileSync(new URL('../src/core/device-capabilities.mjs', import.meta.url), 'utf8');
   const speechApi = fs.readFileSync(new URL('../api/speech.mjs', import.meta.url), 'utf8');
