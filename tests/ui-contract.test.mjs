@@ -31,15 +31,24 @@ test('research controls are not exposed as a visible floating vendor control', (
   assert.match(app, /operator-tap/);
 });
 
-test('keeps the home screen focused on help and payment, with ledger and data controls in activity', () => {
+test('keeps the home screen focused on help and an optional repayment, with ledger and data controls in activity', () => {
   const home = app.match(/function homeScreen\(\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
   const activity = app.match(/function activityScreen\(\) \{([\s\S]*?)\n\}/)?.[1] ?? '';
-  assert.match(home, /Example payment plan/);
+  assert.match(home, /Add your next repayment/);
+  assert.match(home, /data-action="payment-screen"/);
   assert.match(home, /What do you need help with/);
   assert.doesNotMatch(home, /ledgerCard\(\)/);
   assert.doesNotMatch(home, /data-action="open-settings"/);
   assert.match(activity, /ledgerCard\(\)/);
   assert.match(activity, /data-action="open-settings"/);
+});
+
+test('stores a confirmed repayment plan locally and makes it editable from home', () => {
+  const serviceWorker = fs.readFileSync(new URL('../service-worker.js', import.meta.url), 'utf8');
+  assert.match(app, /savePaymentPlan\(localStorage/);
+  assert.match(app, /clearPaymentPlan\(localStorage/);
+  assert.match(app, /data-action="save-payment-plan"/);
+  assert.match(serviceWorker, /payment-plan-store\.mjs/);
 });
 
 test('scrolls the capped desktop phone frame and keeps navigation visible', () => {

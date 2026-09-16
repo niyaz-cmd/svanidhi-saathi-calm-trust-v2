@@ -7,6 +7,7 @@ import { audioCaptureSupported, VoiceAudioCapture, transcribeRecordedAudio } fro
 import { createConversationalVoiceWorkflow, runPromptThenListen } from './core/voice-flow.mjs';
 import { VOICE_CONVERSATION_COPY } from './core/voice-copy.mjs';
 import { loadLedger, appendConfirmedRecord, correctEntry, dailyTotals, effectiveAmount } from './core/ledger-store.mjs';
+import { readPaymentPlan, savePaymentPlan, clearPaymentPlan } from './core/payment-plan-store.mjs';
 import { readPrivacy, savePrivacy, defaultPrivacy, exportLocalData, deleteLocalData, deleteResearchData, NOTICE_VERSION } from './core/privacy-store.mjs';
 import { PRIVACY_COPY } from './ui/privacy-copy.mjs';
 import { icon } from './ui/icons.mjs';
@@ -115,6 +116,8 @@ const state = {
   question: null,
   answer: null,
   languageChangeTarget: null,
+  paymentPlan: null,
+  paymentError: '',
   researchOpen: false,
   payment: { totalDue:8400, readyAmount:7080, remainingDays:11, dueDate:dateAfterToday(11), minimumDue:420, statementDate:'20 August' },
   session: { id:newSessionId(), startedAt:new Date().toISOString() },
@@ -140,6 +143,8 @@ function loadLocal() {
 }
 loadLocal();
 state.privacy = readPrivacy(localStorage);
+state.paymentPlan = readPaymentPlan(localStorage);
+if (state.paymentPlan) state.payment = { ...state.payment, ...state.paymentPlan, remainingDays:daysUntil(state.paymentPlan.dueDate), minimumDue:Math.min(state.payment.minimumDue, state.paymentPlan.totalDue) };
 if (state.privacy.acceptedAt) { state.language = state.privacy.language; state.screen = 'home'; }
 
 const voiceWorkflow = createConversationalVoiceWorkflow({
@@ -238,15 +243,16 @@ function declinedScreen() {
 function homeScreen() {
   const r = reserve();
   loadLocal();
+  const hasPlan = Boolean(state.paymentPlan);
   return `<main class="screen">
     ${header()}
     <div><h2>${pc('greeting')}</h2><p class="support" style="margin-top:4px">${t('morning')}</p></div>
-    <section class="hero-card">
-      <p class="support">${lt('ಉದಾಹರಣೆ ಪಾವತಿ ಯೋಜನೆ','उदाहरण भुगतान योजना','Example payment plan')}</p>
+    ${hasPlan ? `<section class="hero-card">
       <p class="kicker">${t('payment')}</p><div class="money">${money(state.payment.totalDue)}</div><p>${dueDate()} · ${state.payment.remainingDays} ${t('days')}</p>
       <div class="payment-breakdown"><div><span>${t('readyNow')}</span><strong>${money(state.payment.readyAmount)}</strong></div><div><span>${t('stillNeeded')}</span><strong>${money(r.remaining)}</strong></div></div>
       <div class="due-meta"><button class="calculation-link" data-action="explain-payment">${icon('info',17,true)} ${t('calculation')}</button><div style="text-align:right"><span class="support">${t('suggested')}</span><div style="font-size:22px;font-weight:850;margin-top:3px">${money(r.dailyReserve)}</div></div></div>
-    </section>
+      <button class="hero-edit" data-action="payment-screen">${lt('ಪಾವತಿ ಬದಲಾಯಿಸಿ','भुगतान बदलें','Change repayment')}</button>
+    </section>` : `<section class="card repayment-empty"><span class="action-icon">${icon('calendar',24)}</span><div><h3>${lt('ನಿಮ್ಮ ಮುಂದಿನ ಪಾವತಿ ಸೇರಿಸಿ','अपना अगला भुगतान जोड़ें','Add your next repayment')}</h3><p class="support">${lt('ಮೊತ್ತ ಮತ್ತು ದಿನಾಂಕ ಸೇರಿಸಿ. ಸಾಥಿ ಇಂದು ಎಷ್ಟು ಬೇರ್ಪಡಿಸಬೇಕು ಎಂದು ತೋರಿಸುತ್ತದೆ.','रकम और तारीख जोड़ें। साथी बताएगा कि आज कितना अलग रखना है।','Add the amount and date. Saathi will show what to set aside today.')}</p></div><button class="btn primary full" data-action="payment-screen">${lt('ಪಾವತಿ ಸೇರಿಸಿ','भुगतान जोड़ें','Add repayment')}</button></section>`}
     <section class="home-prompt"><h3>${lt('ನಿಮಗೆ ಯಾವ ಸಹಾಯ ಬೇಕು?','आपको किस मदद की ज़रूरत है?','What do you need help with?')}</h3><p class="support">${lt('ಪಾವತಿ, ಬಿಲ್ ಅಥವಾ ಇಂದಿನ ಹಣದ ಬಗ್ಗೆ ಸಾಥಿಯನ್ನು ಕೇಳಿ.','भुगतान, बिल या आज के पैसे के बारे में साथी से पूछें।','Ask Saathi about your payment, bill, or today’s money.')}</p></section>
     <button class="voice-card primary-action" data-action="voice-screen"><span class="voice-orb">${icon('mic',34,true)}</span><span class="voice-card-copy"><strong>${t('tellToday')}</strong><span>${t('tellSupport')}</span></span>${icon('arrow',22,true)}</button>
     <div class="grid-2">
@@ -255,6 +261,11 @@ function homeScreen() {
     </div>
     ${nav('home')}
   </main>`;
+}
+
+function paymentScreen() {
+  const plan = state.paymentPlan ?? { totalDue:'', readyAmount:'', dueDate:'' };
+  return `<main class="screen">${header({back:true})}<h1>${lt('ಮುಂದಿನ ಪಾವತಿ','अगला भुगतान','Next repayment')}</h1><p class="lede">${lt('ನಿಮಗೆ ಸ್ಪಷ್ಟವಾಗಿರುವ ಮೊತ್ತ ಮತ್ತು ದಿನಾಂಕ ಮಾತ್ರ ಸೇರಿಸಿ. ಇದು ಈ ಫೋನ್‌ನಲ್ಲೇ ಉಳಿಯುತ್ತದೆ.','केवल वही रकम और तारीख जोड़ें जो साफ़ हो। यह इसी फोन पर सेव होती है।','Add only an amount and date you can clearly confirm. This stays on this phone.')}</p><section class="card payment-form"><label class="input-label">${lt('ಒಟ್ಟು ಪಾವತಿಸಬೇಕಾದ ಮೊತ್ತ','कुल भुगतान रकम','Total amount due')}<input class="input" id="payment-total" type="number" inputmode="numeric" min="1" step="1" placeholder="8400" value="${escapeHtml(plan.totalDue)}"></label><label class="input-label">${lt('ಈಗಾಗಲೇ ಬೇರ್ಪಡಿಸಿದ ಮೊತ್ತ','पहले से अलग रखी रकम','Already set aside')}<input class="input" id="payment-ready" type="number" inputmode="numeric" min="0" step="1" placeholder="0" value="${escapeHtml(plan.readyAmount)}"></label><label class="input-label">${lt('ಪಾವತಿ ದಿನ','भुगतान की तारीख','Payment date')}<input class="input" id="payment-date" type="date" min="${dateAfterToday(0)}" value="${escapeHtml(plan.dueDate)}"></label></section>${state.paymentError ? `<p class="card warning" role="alert">${escapeHtml(state.paymentError)}</p>` : ''}<button class="btn primary full" data-action="save-payment-plan">${lt('ಪಾವತಿ ಉಳಿಸಿ','भुगतान सेव करें','Save repayment')}</button>${state.paymentPlan ? `<button class="btn secondary full danger" data-action="remove-payment-plan">${lt('ಈ ಪಾವತಿ ತೆಗೆದುಹಾಕಿ','यह भुगतान हटाएं','Remove this repayment')}</button>` : ''}</main>`;
 }
 
 function voiceScreen() {
@@ -409,7 +420,7 @@ function escapeHtml(value='') {
 }
 
 function screenHtml() {
-  const map = { privacy:privacyScreen, settings:privacyScreen, deleteData:deleteScreen, declined:declinedScreen, language:welcomeScreen, trust:trustScreen, home:homeScreen, voice:voiceScreen, confirm:confirmScreen, guidance:guidanceScreen, billCapture:billCaptureScreen, billExplained:billExplainedScreen, ask:askScreen, activity:activityScreen, offline:offlineScreen, uncertain:uncertainScreen };
+  const map = { privacy:privacyScreen, settings:privacyScreen, deleteData:deleteScreen, declined:declinedScreen, language:welcomeScreen, trust:trustScreen, home:homeScreen, payment:paymentScreen, voice:voiceScreen, confirm:confirmScreen, guidance:guidanceScreen, billCapture:billCaptureScreen, billExplained:billExplainedScreen, ask:askScreen, activity:activityScreen, offline:offlineScreen, uncertain:uncertainScreen };
   return (map[state.screen] ?? homeScreen)();
 }
 
@@ -439,6 +450,13 @@ function paymentExplanationText() {
     `कुल भुगतान ${money(state.payment.totalDue)} है। अभी ${money(state.payment.readyAmount)} तैयार हैं। ${money(r.remaining)} बाकी हैं। ${money(r.remaining)} को ${state.payment.remainingDays} दिनों में बाँटने पर रोज़ ${money(r.dailyReserve)} होते हैं।`,
     `The total payment is ${money(state.payment.totalDue)}. You already have ${money(state.payment.readyAmount)} ready. ${money(r.remaining)} remains. ${money(r.remaining)} divided across ${state.payment.remainingDays} days is ${money(r.dailyReserve)} per day.`
   );
+}
+
+function daysUntil(date) {
+  const target = new Date(`${date}T12:00:00+05:30`);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return Math.max(0, Math.ceil((target.getTime() - today.getTime()) / 86400000));
 }
 
 async function playSaathiSpeech(text, eventName) {
@@ -765,6 +783,32 @@ root.addEventListener('click', async (event) => {
       break;
     }
     case 'bill-screen': go('billCapture'); break;
+    case 'payment-screen': state.paymentError=''; go('payment'); break;
+    case 'save-payment-plan': {
+      const totalDue = Number(document.querySelector('#payment-total')?.value);
+      const readyAmount = Number(document.querySelector('#payment-ready')?.value);
+      const paymentDate = document.querySelector('#payment-date')?.value;
+      try {
+        const plan = savePaymentPlan(localStorage, { totalDue, readyAmount, dueDate:paymentDate });
+        state.paymentPlan = plan;
+        state.payment = { ...state.payment, ...plan, remainingDays:daysUntil(plan.dueDate), minimumDue:Math.min(state.payment.minimumDue, plan.totalDue) };
+        state.paymentError='';
+        log('payment_plan_saved', { remainingDays:state.payment.remainingDays });
+        go('home');
+      } catch {
+        state.paymentError=lt('ಮೊತ್ತ ಮತ್ತು ದಿನಾಂಕವನ್ನು ಪರಿಶೀಲಿಸಿ. ಈಗಾಗಲೇ ಬೇರ್ಪಡಿಸಿದ ಮೊತ್ತವು ಒಟ್ಟು ಮೊತ್ತಕ್ಕಿಂತ ಹೆಚ್ಚಿರಬಾರದು.','रकम और तारीख जाँचें। पहले से अलग रखी रकम कुल रकम से अधिक नहीं हो सकती।','Check the amounts and date. The amount set aside cannot be more than the total due.');
+        render();
+      }
+      break;
+    }
+    case 'remove-payment-plan': {
+      clearPaymentPlan(localStorage);
+      state.paymentPlan=null;
+      state.payment={ totalDue:8400, readyAmount:7080, remainingDays:11, dueDate:dateAfterToday(11), minimumDue:420, statementDate:'20 August' };
+      log('payment_plan_removed');
+      go('home');
+      break;
+    }
     case 'open-research': state.researchOpen=true; render(); break;
     case 'close-research': state.researchOpen=false; render(); break;
     case 'offline-screen': go('offline'); break;
@@ -938,7 +982,7 @@ function historyBack(){
     state.listening = false;
     state.speaking = false;
   }
-  const fallbacks={privacy:'trust',settings:'home',deleteData:'settings',trust:'language',voice:'home',confirm:'home',guidance:'home',billCapture:'home',billExplained:'billCapture',uncertain:'billCapture',offline:'home'};
+  const fallbacks={privacy:'trust',settings:'home',deleteData:'settings',trust:'language',payment:'home',voice:'home',confirm:'home',guidance:'home',billCapture:'home',billExplained:'billCapture',uncertain:'billCapture',offline:'home'};
   go(fallbacks[state.screen]||'home');
 }
 function downloadJson(value, filename) {
