@@ -1,5 +1,5 @@
 const names = {
-  mic:'mic', camera:'photo_camera', scan:'document_scanner', receipt:'receipt_long', gallery:'photo_library',
+  mic:'mic', camera:'photo_camera', scan:'document_scanner', receipt:'receipt_long', gallery:'photo_library', calendar:'calendar_month',
   check:'check_circle', shield:'shield', arrow:'arrow_forward', back:'arrow_back', volume:'volume_up', info:'info',
   wifiOff:'wifi_off', home:'home', list:'history', help:'forum', download:'download', payments:'payments', language:'language'
 };

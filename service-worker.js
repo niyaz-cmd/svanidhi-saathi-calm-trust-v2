@@ -1,4 +1,4 @@
-const CACHE = 'saathi-field-v0.6.2';
+const CACHE = 'saathi-field-v0.6.3';
 const APP_SHELL = [
   '/', '/index.html', '/styles.css', '/manifest.webmanifest', '/public/icons/icon.svg',
   '/src/app.mjs', '/src/core/privacy-store.mjs', '/src/ui/privacy-copy.mjs', '/src/ui/icons.mjs', '/src/core/finance-engine.mjs', '/src/core/payment-plan-store.mjs', '/src/core/language-switch.mjs', '/src/core/speech-parser.mjs',
